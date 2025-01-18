@@ -6,12 +6,14 @@ export const authenticate = (req, res, next) => {
     // Parse the cookies from the request headers
     // const cookies = cookie.parse(req.headers.cookie || '');
 
-    const cookies = req.headers.cookies; // Extract the token from the cookies
+    const cookies = req.cookies || ''; // Extract the token from the cookies
    
     console.log('HEADER:', req.headers);
+    console.log('COOKIE: ', cookies);
     const token = cookies.token || '';
 
     if (!token) {
+        console.log(res.getHeaders());
         return res.status(401).json({ error: 'Access denied. No token provided.' });
     }
 

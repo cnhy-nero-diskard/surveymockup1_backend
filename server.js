@@ -15,6 +15,11 @@ import cookieParser from 'cookie-parser';
 
 dotenv.config();
 const app = express();
+app.use(cors({
+  origin: 'http://localhost:3000', // Allow requests from your React frontend
+  credentials: true, // Allow cookies to be sent
+}));
+
 app.use(express.json());
 app.use(cookieParser());
 
@@ -24,13 +29,7 @@ for (const envVar of requiredEnvVars) {
     throw new Error(`Environment variable ${envVar} is not set`);
   }
 }
-const corsOptions = {
-  origin: true, // Explicitly allow your frontend origin
-  optionsSuccessStatus: 200, // Some legacy browsers choke on 204
-  credentials: true // Allow credentials (cookies, authorization headers, etc.)
-};
 
-app.use(cors(corsOptions));
 
 // Use client routes
 app.use('/', clientRoutes);

@@ -17,6 +17,6 @@ router.put('/api/admin/update/:id', authenticate, updateTourismAttractionControl
 
 router.post('/api/admin/add', validateTourismAttraction, addTourismAttractionController);
 router.post('/api/survey/submit', validateSurveyResponse, submitSurveyResponseController);
-router.get('/api/admin/session-data', authenticate, authorizeAdmin, getAdminSessionData);
+router.get('/api/admin/session-data', authenticate, getAdminSessionData);
 
 export default router;

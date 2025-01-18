@@ -19,6 +19,11 @@ const pool = new pg.Pool({
   port: process.env.PG_PORT,
 });
 
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+  process.exit(-1); // Exit the process or handle the error appropriately
+});
+
 pool.connect();
 
 export default pool;

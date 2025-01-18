@@ -34,13 +34,13 @@ export const login = async (req, res, next) => {
         // Set the token in an HttpOnly cookie
         res.cookie('token', token, {
             httpOnly: true, // Prevent JavaScript access
-            secure: process.env.NODE_ENV == 'production', // Only send over HTTPS in production
-            sameSite: 'None', // Prevent CSRF attacks
+            secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in production
+            sameSite: 'strict', // Prevent CSRF attacks
             maxAge: 3600000, // 1 hour expiration
-        });
+            path: '/', // Ensure the cookie is sent for all routes
+        }).status(200).send('OK');
         console.log('Response Headers:', res.getHeaders());
 
-        res.json({ message: 'Login successful' });
         logger.info(`Admin with username ${username} logged in successfully with token: ${token}`);
 
     } catch (err) {
@@ -62,14 +62,15 @@ export const logout = async (req, res, next) => {
         res.clearCookie('token', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            sameSite: 'Lax',
+            
         });
 
         res.json({ message: 'Logged out successfully' });
     } catch (err) {
         next(err);
     }
-};export const registerAdmin = async (req, res) => {
+}; export const registerAdmin = async (req, res) => {
     const { username, password, email } = req.body;
     logger.info(`POST /api/auth/register for password: ${password} and username: ${username}    email: ${email}`);
     try {
