@@ -71,7 +71,7 @@ export const updateTourismAttractionController = async (req, res, next) => {
 };
 
 export const getAdminSessionData = async (req, res, next) => {
-    console.log("GET /api/admin/session-data");
+    logger.info("GET /api/admin/session-data");
     try {
         const result = await pool.query('SELECT username, last_login, last_logout, session_duration, is_logged_in FROM admin_table');
         res.json(result.rows);

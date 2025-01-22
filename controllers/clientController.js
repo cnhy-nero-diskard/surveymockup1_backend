@@ -22,7 +22,7 @@ export const getLanguageSelect = async (req, res, next) => {
         const query = 'SELECT * FROM languages';
         const result = await pool.query(query);
         res.json(result.rows);
-        console.log(result.rows);
+        logger.info(result.rows);
     } catch (err) {
         next(err);
     }
@@ -44,7 +44,7 @@ export const getTexts = async (req, res, next) => {
             return acc;
         }, {});
         res.json(translations);
-        console.log(translations);
+        logger.info(translations);
     } catch (err) {
         next(err);
     }

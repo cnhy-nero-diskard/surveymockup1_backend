@@ -39,7 +39,7 @@ export const login = async (req, res, next) => {
             maxAge: 3600000, // 1 hour expiration
             path: '/', // Ensure the cookie is sent for all routes
         }).status(200).send('OK');
-        console.log('Response Headers:', res.getHeaders());
+        logger.info('Response Headers:', res.getHeaders());
 
         logger.info(`Admin with username ${username} logged in successfully with token: ${token}`);
 

@@ -54,13 +54,13 @@ const limiter = rateLimit({
 
 app.use(limiter);
 app.get('/verify-cookie', (req, res) => {
-  console.log('Cookies: ', req.cookies);
+  logger.info('Cookies: ', req.cookies);
   const token = req.cookies.token; // Access the cookie
   if (token) {
-      console.log('Token found in cookie:', token);
+      logger.info('Token found in cookie:', token);
       res.send('Cookie is present and contains data.');
   } else {
-      console.log('No token found in cookie.');
+      logger.info('No token found in cookie.');
       res.status(400).send('Cookie is missing or empty.');
   }
 });

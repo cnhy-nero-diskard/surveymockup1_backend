@@ -6,7 +6,7 @@ import { submitSurveyResponseController } from '../controllers/surveyController.
 import { validateSurveyResponse } from '../middleware/validationMiddleware.js';
 import { validateTourismAttraction } from '../middleware/validationMiddleware.js';
 import { addTourismAttraction } from '../services/adminService.js';
-
+import { getMetrics } from '../metrics/metricsController.js';
 
 const router = express.Router();
 router.get('/api/admin/data', authenticate, getAdminData);
@@ -18,5 +18,7 @@ router.put('/api/admin/update/:id', authenticate, updateTourismAttractionControl
 router.post('/api/admin/add', validateTourismAttraction, addTourismAttractionController);
 router.post('/api/survey/submit', validateSurveyResponse, submitSurveyResponseController);
 router.get('/api/admin/session-data', authenticate, getAdminSessionData);
+router.get('/metrics', getMetrics);
+
 
 export default router;

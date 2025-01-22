@@ -20,7 +20,9 @@ CREATE TABLE survey_responses (
     is_open_ended BOOLEAN NOT NULL DEFAULT FALSE,
     category response_category NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	is_analyzed BOOLEAN NOT NULL DEFAULT FALSE,
+
 );
 -- Indexes for performance optimization
 CREATE INDEX idx_survey_responses_user_id ON survey_responses(user_id);
