@@ -9,19 +9,23 @@ import authRoutes from './routes/authRoutes.js';
 import logger from './middleware/logger.js';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import https from 'https';
-import fs from 'fs';
 import cookieParser from 'cookie-parser';
+import { updateAnonymousUserActivity } from './middleware/updateAnonymousUserActivity.js';
 
 dotenv.config();
 const app = express();
+
+
+
+app.use(express.json());
+app.use(cookieParser());
+
+// app.use(generateAnonymousUserId);
+app.use(updateAnonymousUserActivity); // Apply globally
 app.use(cors({
   origin: 'http://localhost:3000', // Allow requests from your React frontend
   credentials: true, // Allow cookies to be sent
 }));
-
-app.use(express.json());
-app.use(cookieParser());
 
 const requiredEnvVars = ['PATH_TO_CERT', 'PATH_TO_KEY', 'FRONTEND_URL', 'PORT'];
 for (const envVar of requiredEnvVars) {

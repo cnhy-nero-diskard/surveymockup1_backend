@@ -24,6 +24,22 @@ CREATE TABLE survey_responses (
 	is_analyzed BOOLEAN NOT NULL DEFAULT FALSE,
 
 );
+
+ALTER TABLE survey_responses
+ADD COLUMN anonymous_user_id UUID;
+
+-- Add foreign key constraint
+ALTER TABLE survey_responses
+ADD CONSTRAINT fk_anonymous_user
+FOREIGN KEY (anonymous_user_id)
+REFERENCES anonymous_users(anonymous_user_id)
+ON DELETE CASCADE;
+
+ALTER TABLE anonymous_users
+ADD COLUMN is_active BOOLEAN DEFAULT FALSE;
+
+
+
 -- Indexes for performance optimization
 CREATE INDEX idx_survey_responses_user_id ON survey_responses(user_id);
 CREATE INDEX idx_survey_responses_component_name ON survey_responses(component_name);
