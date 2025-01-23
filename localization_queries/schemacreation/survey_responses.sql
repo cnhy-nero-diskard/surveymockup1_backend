@@ -38,8 +38,12 @@ ON DELETE CASCADE;
 ALTER TABLE anonymous_users
 ADD COLUMN is_active BOOLEAN DEFAULT FALSE;
 
+-- WAPA NI NA EXECUTE
+ALTER TABLE anonymous_users
+ADD COLUMN has_completed BOOLEAN DEFAULT FALSE;
 
-
+ALTER TABLE anonymous_users
+ADD COLUMN nickname VARCHAR(50) DEFAULT '';
 -- Indexes for performance optimization
 CREATE INDEX idx_survey_responses_user_id ON survey_responses(user_id);
 CREATE INDEX idx_survey_responses_component_name ON survey_responses(component_name);

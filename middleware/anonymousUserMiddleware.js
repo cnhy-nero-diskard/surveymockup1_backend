@@ -14,7 +14,7 @@ export const generateAnonymousUserId = async (req, res, next) => {
         // If the anonymousUserId cookie doesn't exist, generate a new one
         if (!anonymousUserId) {
             anonymousUserId = uuidv4(); // Generate a UUID
-            logger.info(`Created new anonymous user ID: ${anonymousUserId}`);
+            // logger.info(`Created new anonymous user ID: ${anonymousUserId}`);
 
             // Insert the anonymous user into the database
             await pool.query(

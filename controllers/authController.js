@@ -38,7 +38,7 @@ export const login = async (req, res, next) => {
             sameSite: 'strict', // Prevent CSRF attacks
             maxAge: 3600000, // 1 hour expiration
             path: '/', // Ensure the cookie is sent for all routes
-        }).status(200).send('OK');
+        }).status(200).send('Logged in successfully');
         logger.info('Response Headers:', res.getHeaders());
 
         logger.info(`Admin with username ${username} logged in successfully with token: ${token}`);
@@ -48,6 +48,7 @@ export const login = async (req, res, next) => {
     }
 };
 export const logout = async (req, res, next) => {
+    logger.info('POST /api/auth/logout');
     const { username } = req.user; // Assuming the user is attached to the request by the auth middleware
 
     try {
@@ -62,11 +63,10 @@ export const logout = async (req, res, next) => {
         res.clearCookie('token', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'Lax',
+            sameSite: 'strict',
             
-        });
+        }).status(200).send('Logged out successfully');
 
-        res.json({ message: 'Logged out successfully' });
     } catch (err) {
         next(err);
     }
@@ -101,3 +101,20 @@ export const logout = async (req, res, next) => {
     }
 };
 
+export const checkAuth = async (req, res, next) => {
+    const token = req.cookies?.token;
+
+    if (!token || typeof token !== 'string' || token.trim() === '') {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        res.status(200).json({ message: 'Authenticated', user: decoded });
+    } catch (err) {
+        if (err.name === 'TokenExpiredError') {
+            return res.status(401).json({ error: 'Token expired.' });
+        }
+        res.status(400).json({ error: 'Unauthorized' });
+    }
+};

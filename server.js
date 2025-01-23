@@ -11,7 +11,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import { updateAnonymousUserActivity } from './middleware/updateAnonymousUserActivity.js';
-
+import { generateAnonymousUserId } from './middleware/anonymousUserMiddleware.js';
 dotenv.config();
 const app = express();
 
@@ -20,7 +20,7 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-// app.use(generateAnonymousUserId);
+app.use(generateAnonymousUserId);
 app.use(updateAnonymousUserActivity); // Apply globally
 app.use(cors({
   origin: 'http://localhost:3000', // Allow requests from your React frontend
