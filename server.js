@@ -12,6 +12,7 @@ import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import { updateAnonymousUserActivity } from './middleware/updateAnonymousUserActivity.js';
 import { generateAnonymousUserId } from './middleware/anonymousUserMiddleware.js';
+import bodyParser from 'body-parser';
 dotenv.config();
 const app = express();
 
@@ -19,6 +20,7 @@ const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
+
 
 app.use(generateAnonymousUserId);
 app.use(updateAnonymousUserActivity); // Apply globally

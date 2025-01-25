@@ -1,6 +1,6 @@
 // routes/adminRoutes.js
 import express from 'express';
-import { getAdminData, getAdminSessionData, updateTourismAttractionController, fetchTourismAttractionsController, addTourismAttractionController, deleteTourismAttractionController } from '../controllers/adminController.js';
+import { getAdminData, getAdminSessionData, updateTourismAttractionController, fetchTourismAttractionsController, addTourismAttractionController, deleteTourismAttractionController, posthftokens, gethftokens, analyzeSentiment } from '../controllers/adminController.js';
 import { authenticate,authorizeAdmin } from '../middleware/authMiddleware.js';
 import { submitSurveyResponseController } from '../controllers/surveyController.js';
 import { validateSurveyResponse } from '../middleware/validationMiddleware.js';
@@ -19,6 +19,10 @@ router.post('/api/admin/add', validateTourismAttraction, addTourismAttractionCon
 router.post('/api/survey/submit', validateSurveyResponse, submitSurveyResponseController);
 router.get('/api/admin/session-data', authenticate, getAdminSessionData);
 router.get('/metrics', getMetrics);
+
+router.post('/api/hf-tokens', posthftokens);
+router.get('/api/hf-tokens', authenticate, gethftokens);
+router.post('/api/analyzesentiment', analyzeSentiment);
 
 
 export default router;

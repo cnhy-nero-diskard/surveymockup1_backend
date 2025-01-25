@@ -3,6 +3,8 @@ import { getAdminDataFromDB, updateTourismAttraction, addTourismAttraction, fetc
 import logger from '../middleware/logger.js';
 import { validationResult } from 'express-validator';
 import pool from '../config/db.js';
+import { addHFToken, getHFTokenByLabel, getHFTokens } from '../services/hfTokenService.js';
+import { queryHuggingFace } from '../services/huggingFaceService.js';
 
 export const getAdminData = async (req, res, next) => {
     logger.info("GET /api/admin/data");
@@ -79,3 +81,48 @@ export const getAdminSessionData = async (req, res, next) => {
         next(err);
     }
 };
+
+export const posthftokens =  async (req, res) => {
+    logger.info("POST /api/hf-tokens");
+    logger.info(req.body);
+    const { apitoken, label } = req.body;
+    try {
+      const result = await addHFToken(apitoken, label);
+      res.status(201).json({ id: result.id, label: result.label });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  };
+  
+export const gethftokens = async (req, res) => {
+    try {
+      const tokens = await getHFTokens();
+      res.json(tokens);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  };
+
+export const analyzeSentiment =  async (req, res) => {
+    const text = req.body.text;
+    const tokenLabel = req.body.tokenLabel; 
+    logger.info(`Analyzing sentiment:, ${text}`);
+    logger.info(`Using API token label: ${tokenLabel}`);
+    try {
+      // Fetch the decrypted API token from the database using the label
+      const apiToken = await getHFTokenByLabel(tokenLabel); // Ensure this function is implemented in hfTokenService.js
+  
+      if (!apiToken) {
+        return res.status(400).json({ error: 'Invalid API token label' });
+      }
+  
+      // Call the Hugging Face API
+      const analysisResult = await queryHuggingFace(text, apiToken);
+  
+      // Return the analysis result to the frontend
+      res.json(analysisResult);
+    } catch (err) {
+      console.error('Error during analysis:', err);
+      res.status(500).json({ error: 'Failed to analyze text' });
+    }  };
+  
