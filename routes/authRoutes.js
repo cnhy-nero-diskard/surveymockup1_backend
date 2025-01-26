@@ -11,4 +11,5 @@ router.get('/api/auth/logout', authenticate, logout);
 router.post('/api/auth/register-admin', verifyHMAC, registerAdmin); // Apply HMAC middleware
 router.get('/api/auth/check', checkAuth);
 
+
 export default router;

@@ -11,6 +11,7 @@
     "cryptojs": "^2.5.3",
     "csurf": "^1.10.0",
     "dotenv": "^16.4.7",
+    "events": "^3.3.0",
     "expres": "^0.0.5",
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",

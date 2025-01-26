@@ -10,7 +10,6 @@ import logger from '../middleware/logger.js';
 export const submitSurveyResponse = async (response, anonymousUserId) => {
     const query = `
         INSERT INTO survey_responses (
-            user_id, 
             anonymous_user_id, 
             component_name, 
             question_key, 
@@ -19,13 +18,12 @@ export const submitSurveyResponse = async (response, anonymousUserId) => {
             is_open_ended, 
             category
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING *;
     `;
 
     const values = [
-        response.user_id,
-        anonymousUserId, // Store the anonymous user ID as a foreign key
+        anonymousUserId, 
         response.component_name,
         response.question_key,
         response.response_value,

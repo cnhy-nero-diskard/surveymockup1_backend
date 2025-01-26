@@ -5,14 +5,15 @@ import { submitSurveyResponse, fetchSurveyResponsesByUser } from '../services/su
  * Submit a survey response.
  */
 // controllers/surveyController.js
-export const submitSurveyResponseController = async (req, res) => {
+export const submitSurveyResponseController = async (req, res, next) => {
     logger.info("POST /api/survey/submit");
     try {
         const response = req.body;
-        const anonymousUserId = req.cookies.anonymousUserId;
+        const anonymousUserId = req.session.anonymousUserId;
         const result = await submitSurveyResponse(response, anonymousUserId);
-        res.status(201).json(result);
+        res.status(201).send("OK");
     } catch (err) {
+        logger.info("SOMETHING HAPPENED")
         next(err);
     }
 };
@@ -23,7 +24,7 @@ export const fetchSurveyResponsesController = async (req, res) => {
         const { user_id } = req.params;
         const anonymousUserId = req.cookies.anonymousUserId;
         const responses = await fetchSurveyResponsesByUser(user_id, anonymousUserId);
-        res.json(responses);
+        res.send(201).json(responses);
     } catch (err) {
         next(err);
     }

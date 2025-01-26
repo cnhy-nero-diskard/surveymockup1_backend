@@ -5,6 +5,7 @@ import { validationResult } from 'express-validator';
 import pool from '../config/db.js';
 import { addHFToken, getHFTokenByLabel, getHFTokens } from '../services/hfTokenService.js';
 import { queryHuggingFace } from '../services/huggingFaceService.js';
+import { logEmitter } from '../middleware/logger.js';
 
 export const getAdminData = async (req, res, next) => {
   logger.info("GET /api/admin/data");
@@ -151,11 +152,31 @@ export const analyzeTopics = async (req, res) => {
 };
 
 export const fetchAnonymousUsersController = async (req, res, next) => {
-  logger.info("------------ GET /api/admin/anonymous-users");
+  logger.info("GET /api/admin/anonymous-users");
   try {
     const users = await fetchAnonymousUsers();
     res.json(users);
   } catch (err) {
     next(err);
   }
+};
+export const logstream = async (req, res, next) => {
+  console.log("EVENT SOURCE LOGSTREAM");
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Access-Control-Allow-Origin', process.env.FRONTEND_URL); // Explicitly allow your React app's origin
+  res.setHeader('Access-Control-Allow-Credentials', 'true'); // Allow credentials (if needed)
+
+  const sendLog = (log) => {
+    res.write(`data: ${JSON.stringify(log)}\n\n`);
+  };
+
+  // Listen for new logs
+  logEmitter.on('log', sendLog);
+
+  // Clean up on client disconnect
+  req.on('close', () => {
+    logEmitter.off('log', sendLog);
+  });
 };

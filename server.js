@@ -16,6 +16,14 @@ import bodyParser from 'body-parser';
 import session from 'express-session';
 import pool from './config/db.js';
 import pgSession from 'connect-pg-simple';
+import { logstream } from './controllers/adminController.js';
+
+const requiredEnvVars = ['PATH_TO_CERT', 'PATH_TO_KEY', 'FRONTEND_URL', 'PORT'];
+for (const envVar of requiredEnvVars) {
+  if (!process.env[envVar]) {
+    throw new Error(`Environment variable ${envVar} is not set`);
+  }
+}
 
 dotenv.config();
 const PgSession = pgSession(session);
@@ -27,11 +35,13 @@ app.use(express.json());
 app.use(cors({
   origin: 'http://localhost:3000', // Allow requests from your React frontend
   credentials: true, // Allow cookies to be sent
+  
 }));
+
+
+
 app.use(cookieParser());
-
-
-
+app.use('/api/log-stream', logstream)
 app.use(
   session({
     store: new PgSession({
@@ -49,16 +59,6 @@ app.use(
 );
 app.use(handleAnonymousUser);
 
-// app.use(updateAnonymousUserActivity); // Apply globally
-
-
-const requiredEnvVars = ['PATH_TO_CERT', 'PATH_TO_KEY', 'FRONTEND_URL', 'PORT'];
-for (const envVar of requiredEnvVars) {
-  if (!process.env[envVar]) {
-    throw new Error(`Environment variable ${envVar} is not set`);
-  }
-}
-
 
 // Use client routes
 app.use('/', clientRoutes);
@@ -71,7 +71,6 @@ app.use(errorHandler);
 app.use(authRoutes);
 
 
-//cors and helmet for security
 
 app.use(helmet());
 
@@ -101,11 +100,3 @@ app.listen(PORT, () => {
     logger.info(`Server is running on port ${process.env.PORT}`);
 });
 
-// const options = {
-//   key: fs.readFileSync(process.env.PATH_TO_KEY), // Path to your private key
-//   cert: fs.readFileSync(process.env.PATH_TO_CERT), // Path to your certificate
-// };
-
-// https.createServer(options, app).listen(process.env.PORT, () => {
-//   logger.info(`Server is running on port ${process.env.PORT}`);
-// });

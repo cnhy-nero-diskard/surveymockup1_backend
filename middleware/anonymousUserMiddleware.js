@@ -4,6 +4,11 @@ import pool from '../config/db.js';
 import logger from './logger.js';
 
 export const handleAnonymousUser = async (req, res, next) => {
+  if (req.path === '/api/log-stream') {
+    return next();
+  }
+
+
   logger.info('HANDLE ANONYMOUS USER MIDDLEWARE');
   try {
     // Check if the session already has an anonymous user ID
@@ -36,7 +41,6 @@ export const handleAnonymousUser = async (req, res, next) => {
           [req.session.anonymousUserId]
         );
 
-        logger.info(`Marked anonymous user ID ${req.session.anonymousUserId} as inactive`);
       } catch (error) {
         logger.error(`Error marking anonymous user ID ${req.session.anonymousUserId} as inactive:`, error);
       }
