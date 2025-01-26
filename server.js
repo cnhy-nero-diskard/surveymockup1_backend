@@ -11,23 +11,46 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import { updateAnonymousUserActivity } from './middleware/updateAnonymousUserActivity.js';
-import { generateAnonymousUserId } from './middleware/anonymousUserMiddleware.js';
+import { handleAnonymousUser } from './middleware/anonymousUserMiddleware.js';
 import bodyParser from 'body-parser';
+import session from 'express-session';
+import pool from './config/db.js';
+import pgSession from 'connect-pg-simple';
+
 dotenv.config();
+const PgSession = pgSession(session);
 const app = express();
 
 
 
 app.use(express.json());
-app.use(cookieParser());
-
-
-app.use(generateAnonymousUserId);
-app.use(updateAnonymousUserActivity); // Apply globally
 app.use(cors({
   origin: 'http://localhost:3000', // Allow requests from your React frontend
   credentials: true, // Allow cookies to be sent
 }));
+app.use(cookieParser());
+
+
+
+app.use(
+  session({
+    store: new PgSession({
+      pool: pool, // Provide the pool object from the database connection
+      tableName: 'anonymous_session', // Name of the table to store sessions (default is "session")
+    }),
+    secret: process.env.SESSION_SECRET, // Replace with a secure secret
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
+      secure: false, // Set to true if using HTTPS
+    },
+  })
+);
+app.use(handleAnonymousUser);
+
+// app.use(updateAnonymousUserActivity); // Apply globally
+
 
 const requiredEnvVars = ['PATH_TO_CERT', 'PATH_TO_KEY', 'FRONTEND_URL', 'PORT'];
 for (const envVar of requiredEnvVars) {
