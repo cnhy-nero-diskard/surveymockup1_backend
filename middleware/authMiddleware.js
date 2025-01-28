@@ -19,7 +19,7 @@ export const authenticate = (req, res, next) => {
         }
         res.status(400).json({ error: 'YOU R Unauthorized' });
     }
-    logger.info('Token found in cookie. AUTHENTICATED');
+    logger.admin('Token found in cookie. AUTHENTICATED');
 };
 
 export const authorizeAdmin = (req, res, next) => {

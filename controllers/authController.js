@@ -41,7 +41,7 @@ export const login = async (req, res, next) => {
         }).status(200).send('Logged in successfully');
         logger.info('Response Headers:', res.getHeaders());
 
-        logger.info(`Admin with username ${username} logged in successfully with token: ${token}`);
+        logger.admin(`Admin with username ${username} logged in successfully with token: ${token}`);
 
     } catch (err) {
         next(err);

@@ -15,7 +15,7 @@ import logger from '../middleware/logger.js';
  */
 export const submitSurveyResponse = async (response, anonymousUserId) => {
     const logtext = `[POST][SURVEY_RESPONSES] -- UserID ${anonymousUserId} has SUBMITTED ${response.surveyquestion_ref}`
-    logger.info(logtext);
+    logger.database(logtext);
     const query = `
         INSERT INTO survey_responses (
             anonymous_user_id, 

@@ -7,6 +7,8 @@ import { submitSurveyResponse, fetchSurveyResponsesByUser } from '../services/su
 // controllers/surveyController.js
 export const submitSurveyResponseController = async (req, res, next) => {
     logger.info("POST /api/survey/submit");
+    const payload = `ATTEMPTING TO SEND ${JSON.stringify(req.body)}`
+    logger.database(payload);
     try {
         const response = req.body;
         const anonymousUserId = req.session.anonymousUserId;
