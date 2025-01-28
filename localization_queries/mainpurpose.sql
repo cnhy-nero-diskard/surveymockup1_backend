@@ -1,15 +1,15 @@
-INSERT INTO texts (key, language_code, textcontent, component) VALUES
-('MainPurposeHeader', 'en', 'What is your main purpose for this travel/visit?'),
-('MainPurposePleasureVacation', 'en', 'Pleasure/Vacation'),
-('MainPurposeBusinessProfessional', 'en', 'Business/Professional Work'),
-('MainPurposeEducationalFieldtrip', 'en', 'Educational/Fieldtrip'),
-('MainPurposeHealthWellnessRetirement', 'en', 'Health/Wellness/Retirement'),
-('MainPurposeVisitFriendsRelatives', 'en', 'Visit Friends and Relatives'),
-('MainPurposeMeetingIncentiveConventionExhibition', 'en', 'Meeting, Incentive, Convention, Exhibition'),
-('MainPurposeNextButton', 'en', 'NEXT');
+INSERT INTO localization00 (key, language_code, textcontent, component) VALUES
+('MainPurposeHeader', 'en', 'What is your main purpose for this travel/visit?', 'mainpurpose'),
+('MainPurposePleasureVacation', 'en', 'Pleasure/Vacation', 'mainpurpose'),
+('MainPurposeBusinessProfessional', 'en', 'Business/Professional Work', 'mainpurpose'),
+('MainPurposeEducationalFieldtrip', 'en', 'Educational/Fieldtrip', 'mainpurpose'),
+('MainPurposeHealthWellnessRetirement', 'en', 'Health/Wellness/Retirement', 'mainpurpose'),
+('MainPurposeVisitFriendsRelatives', 'en', 'Visit Friends and Relatives', 'mainpurpose'),
+('MainPurposeMeetingIncentiveConventionExhibition', 'en', 'Meeting, Incentive, Convention, Exhibition', 'mainpurpose'),
+('MainPurposeNextButton', 'en', 'NEXT', 'mainpurpose');
 
 
-INSERT INTO texts (key, language_code, textcontent, component) VALUES
+INSERT INTO localization00 (key, language_code, textcontent, component) VALUES
 ('MainPurposeHeader', 'zh', '此次旅行/访问的主要目的是？', 'mainpurpose'),
 ('MainPurposePleasureVacation', 'zh', '娱乐/度假', 'mainpurpose'),
 ('MainPurposeBusinessProfessional', 'zh', '商务/专业工作', 'mainpurpose'),
@@ -38,7 +38,7 @@ INSERT INTO texts (key, language_code, textcontent, component) VALUES
 ('MainPurposeNextButton', 'ko', '다음', 'mainpurpose');
 
 
-INSERT INTO texts (key, language_code, textcontent, component) VALUES
+INSERT INTO localization00 (key, language_code, textcontent, component) VALUES
 ('MainPurposeHeader', 'ru', 'Какова основная цель этой поездки/визита?', 'mainpurpose'),
 ('MainPurposePleasureVacation', 'ru', 'Отдых/Отпуск', 'mainpurpose'),
 ('MainPurposeBusinessProfessional', 'ru', 'Бизнес/Профессиональная деятельность', 'mainpurpose'),
@@ -58,7 +58,7 @@ INSERT INTO texts (key, language_code, textcontent, component) VALUES
 ('MainPurposeNextButton', 'es', 'SIGUIENTE', 'mainpurpose');
 
 
-INSERT INTO texts (key, language_code, textcontent, component) VALUES
+INSERT INTO localization00 (key, language_code, textcontent, component) VALUES
 ('MainPurposeHeader', 'fr', 'Quel est le principal objectif de ce voyage/visite ?', 'mainpurpose'),
 ('MainPurposePleasureVacation', 'fr', 'Loisir/Vacances', 'mainpurpose'),
 ('MainPurposeBusinessProfessional', 'fr', 'Affaires/Travail professionnel', 'mainpurpose'),

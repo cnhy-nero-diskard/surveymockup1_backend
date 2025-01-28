@@ -6,7 +6,7 @@ INSERT INTO localization00 (key, language_code, textcontent, component) VALUES
 
 
 
- INTO localization00 (key, language_code, textcontent, component) VALUES
+INSERT INTO localization00 (key, language_code, textcontent, component) VALUES
 ('primaryAttQuestion', 'ko', '이 이벤트/명소를 주로 방문하셨나요?', 'PrimaryAtt'),
 ('primaryAttYesOption', 'ko', '예', 'PrimaryAtt'),
 ('primaryAttNoOption', 'ko', '아니요', 'PrimaryAtt'),

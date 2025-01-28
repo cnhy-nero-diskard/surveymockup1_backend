@@ -67,11 +67,11 @@ INSERT INTO localization00 (key, language_code, textcontent, component) VALUES
 
 -- French (fr)
 ('feedbackFormTitle', 'fr', 'Formulaire de Retour', 'FeedbackForm'),
-('feedbackFormPlaceholderDefault', 'fr', 'N\'hésitez pas à partager tout retour spécifique', 'FeedbackForm'),
-('feedbackFormPlaceholderDissatisfied', 'fr', 'Qu\'est-ce qui n\'a pas fonctionné ? Comment pouvons-nous améliorer ?', 'FeedbackForm'),
-('feedbackFormPlaceholderNeutral', 'fr', 'Qu\'est-ce qui aurait pu être mieux ?', 'FeedbackForm'),
-('feedbackFormPlaceholderSatisfied', 'fr', 'Qu\'avez-vous aimé ? Des suggestions d\'amélioration ?', 'FeedbackForm'),
-('feedbackFormPlaceholderVerySatisfied', 'fr', 'Qu\'avez-vous adoré ? Des suggestions d\'amélioration ?', 'FeedbackForm'),
+('feedbackFormPlaceholderDefault', 'fr', 'N''hésitez pas à partager tout retour spécifique', 'FeedbackForm'),
+('feedbackFormPlaceholderDissatisfied', 'fr', 'Qu''est-ce qui n''a pas fonctionné ? Comment pouvons-nous améliorer ?', 'FeedbackForm'),
+('feedbackFormPlaceholderNeutral', 'fr', 'Qu''est-ce qui aurait pu être mieux ?', 'FeedbackForm'),
+('feedbackFormPlaceholderSatisfied', 'fr', 'Qu''avez-vous aimé ? Des suggestions d''amélioration ?', 'FeedbackForm'),
+('feedbackFormPlaceholderVerySatisfied', 'fr', 'Qu''avez-vous adoré ? Des suggestions d''amélioration ?', 'FeedbackForm'),
 ('feedbackFormOptionDissatisfied', 'fr', 'Insatisfait', 'FeedbackForm'),
 ('feedbackFormOptionNeutral', 'fr', 'Neutre', 'FeedbackForm'),
 ('feedbackFormOptionSatisfied', 'fr', 'Satisfait', 'FeedbackForm'),

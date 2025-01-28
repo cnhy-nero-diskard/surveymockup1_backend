@@ -93,4 +93,46 @@ INSERT INTO localization00 (key, language_code, textcontent, component) VALUES
 ('whereStayArrivalOptionOwnHome', 'ru', 'Собственный дом', 'WhereStayArrival'),
 ('whereStayArrivalDurationLabel', 'ru', 'Продолжительность(в днях):', 'WhereStayArrival'),
 ('whereStayArrivalDurationPlaceholder', 'ru', 'Введите продолжительность', 'WhereStayArrival'),
-('whereStayArrivalNextButton', 'ru', 'Далее', 'WhereStayArrival');
+('whereStayArrivalNextButton', 'ru', 'Далее', 'WhereStayArrival'),
+
+
+
+-- Additional English entries
+('years', 'en', 'years', 'WhereStayArrival'),
+('months', 'en', 'months', 'WhereStayArrival'),
+('days', 'en', 'days', 'WhereStayArrival'),
+
+-- Additional Korean (ko) entries
+('years', 'ko', '년', 'WhereStayArrival'),
+('months', 'ko', '개월', 'WhereStayArrival'),
+('days', 'ko', '일', 'WhereStayArrival'),
+
+-- Additional Chinese (zh) entries
+('years', 'zh', '年', 'WhereStayArrival'),
+('months', 'zh', '月', 'WhereStayArrival'),
+('days', 'zh', '天', 'WhereStayArrival'),
+
+-- Additional Japanese (ja) entries
+('years', 'ja', '年', 'WhereStayArrival'),
+('months', 'ja', '月', 'WhereStayArrival'),
+('days', 'ja', '日', 'WhereStayArrival'),
+
+-- Additional Spanish (es) entries
+('years', 'es', 'años', 'WhereStayArrival'),
+('months', 'es', 'meses', 'WhereStayArrival'),
+('days', 'es', 'días', 'WhereStayArrival'),
+
+-- Additional French (fr) entries
+('years', 'fr', 'années', 'WhereStayArrival'),
+('months', 'fr', 'mois', 'WhereStayArrival'),
+('days', 'fr', 'jours', 'WhereStayArrival'),
+
+-- Additional Hindi (hi) entries
+('years', 'hi', 'वर्ष', 'WhereStayArrival'),
+('months', 'hi', 'महीने', 'WhereStayArrival'),
+('days', 'hi', 'दिन', 'WhereStayArrival'),
+
+-- Additional Russian (ru) entries
+('years', 'ru', 'лет', 'WhereStayArrival'),
+('months', 'ru', 'месяцы', 'WhereStayArrival'),
+('days', 'ru', 'дни', 'WhereStayArrival');

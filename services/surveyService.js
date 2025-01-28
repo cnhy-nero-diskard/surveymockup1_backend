@@ -3,33 +3,33 @@ import pool from '../config/db.js';
 import logger from '../middleware/logger.js';
 
 /**
- * Submit a survey response to the database.
+ * Submits a survey response to the database.
+ *
  * @param {Object} response - The survey response object.
- * @returns {Promise<Object>} - The inserted survey response.
+ * @param {string} response.surveyquestion_ref - The reference ID of the survey question. Must be a string of less than 10 characters.
+ * @param {Object} response.response_value - The value of the response. Must be a JSONB-compatible object.
+ * @param {string} anonymousUserId - The ID of the anonymous user submitting the response.
+ * @returns {Promise<Object>} The inserted survey response record.
+ *
+ * @throws {Error} If there is an issue with the database query.
  */
 export const submitSurveyResponse = async (response, anonymousUserId) => {
+    const logtext = `[POST][SURVEY_RESPONSES] -- UserID ${anonymousUserId} has SUBMITTED ${response.surveyquestion_ref}`
+    logger.info(logtext);
     const query = `
         INSERT INTO survey_responses (
             anonymous_user_id, 
-            component_name, 
-            question_key, 
-            response_value, 
-            language_code, 
-            is_open_ended, 
-            category
+            surveyquestion_ref, 
+            response_value
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        VALUES ($1, $2, $3)
         RETURNING *;
     `;
 
     const values = [
         anonymousUserId, 
-        response.component_name,
-        response.question_key,
-        response.response_value,
-        response.language_code,
-        response.is_open_ended,
-        response.category,
+        response.surveyquestion_ref, // Ensure this is a string of less than 10 characters
+        response.response_value,    // Ensure this is a JSONB-compatible object
     ];
 
     const result = await pool.query(query, values);

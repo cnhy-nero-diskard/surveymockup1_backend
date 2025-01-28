@@ -13,7 +13,7 @@ export const submitSurveyResponseController = async (req, res, next) => {
         const result = await submitSurveyResponse(response, anonymousUserId);
         res.status(201).send("OK");
     } catch (err) {
-        logger.info("SOMETHING HAPPENED")
+        logger.info("[ERROR UPON SUBMISSION OF DATA]")
         next(err);
     }
 };

@@ -15,16 +15,10 @@ CREATE TYPE response_category AS ENUM (
 CREATE TABLE survey_responses (
     response_id SERIAL PRIMARY KEY,
     anonymous_user_id UUID REFERENCES anonymous_users(anonymous_user_id) ON DELETE CASCADE,
-    component_name component_category NOT NULL,
-    question_key TEXT NOT NULL,
-    response_value JSONB,  -- Use JSONB for storing structured data
-    language_code CHAR(2) NOT NULL REFERENCES languages(code) ON DELETE RESTRICT,
-    is_open_ended BOOLEAN NOT NULL DEFAULT FALSE,
-    category response_category NOT NULL,
+    surveyquestion_ref VARCHAR(10) REFERENCES survey_questions(surveyresponses_ref),
+    response_value TEXT, 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	is_analyzed BOOLEAN NOT NULL DEFAULT FALSE
-
 );
 
 ALTER TABLE survey_responses

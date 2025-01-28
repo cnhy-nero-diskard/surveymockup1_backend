@@ -7,13 +7,10 @@ export const handleAnonymousUser = async (req, res, next) => {
   if (req.path === '/api/log-stream') {
     return next();
   }
-
-
-  logger.info('HANDLE ANONYMOUS USER MIDDLEWARE');
   try {
     // Check if the session already has an anonymous user ID
     if (!req.session.anonymousUserId) {
-        logger.warn('>>>>Anonymous user ID not found in session');
+        logger.warn('[NEW] Anonymous user ID not found in session');
         req.session.anonymousUserId = uuidv4();
 
       // Insert the anonymous user into the databas
