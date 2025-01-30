@@ -12,7 +12,8 @@ const customLevels = {
     info: 2,
     debug: 3,
     database: 4, // Custom log level
-    admin: 5
+    admin: 5,
+    toclient: 6
   },
   colors: {
     error: 'red',
@@ -20,7 +21,8 @@ const customLevels = {
     info: 'green',
     debug: 'blue',
     database: 'cyan bold', 
-    admin: 'magenta'
+    admin: 'magenta',
+    toclient: 'yellow'
   },
 };
 

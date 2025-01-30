@@ -33,4 +33,27 @@ export const authorizeAdmin = (req, res, next) => {
 
     next();
 };
-
+export const validateSurveyStep = async (req, res, next) => {
+    const { user_id } = req.session.anonymousUserId;
+    logger.warn(`[MID] validateSurveyStep for user ${user_id}`);
+    const requestedStep = parseInt(req.path.split("/").pop()); // Extract step number from URL
+    try {
+      const result = await pool.query(
+        "SELECT current_step FROM survey_progress WHERE user_id = $1",
+        [user_id]
+      );
+      if (result.rows.length > 0) {
+        const currentStep = result.rows[0].current_step;
+        if (requestedStep === currentStep + 1 || requestedStep <= currentStep) {
+          next(); // Allow access
+        } else {
+          res.status(403).json({ message: "ACCESS DENIED. FORBIDDEN" });
+        }
+      } else {
+        res.status(404).json({ message: "User progress not found" });
+      }
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send("Server error");
+    }
+  };

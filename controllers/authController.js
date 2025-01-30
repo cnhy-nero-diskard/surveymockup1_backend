@@ -12,7 +12,6 @@ export const login = async (req, res, next) => {
     try {
         const result = await pool.query('SELECT * FROM admin_table WHERE username = $1', [username]);
         const admin = result.rows[0];
-
         if (!admin) {
             logger.warn(`Admin with username ${username} not found`);
             return res.status(400).json({ error: 'Invalid username or password.' });

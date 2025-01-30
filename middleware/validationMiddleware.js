@@ -16,3 +16,4 @@ export const validateSurveyResponse = [
   body('response_value').notEmpty().withMessage('Response value is required'),
   // Will come back to this
 ];
+

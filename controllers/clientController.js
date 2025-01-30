@@ -22,7 +22,6 @@ export const getLanguageSelect = async (req, res, next) => {
         const query = 'SELECT * FROM languages';
         const result = await pool.query(query);
         res.json(result.rows);
-        logger.info(result.rows);
     } catch (err) {
         next(err);
     }
@@ -43,9 +42,49 @@ export const getTexts = async (req, res, next) => {
             acc[row.key] = row.textcontent;
             return acc;
         }, {});
+        logger.toclient(`SENT LOCALIZATION TEXTS TO ${req.session.anonymousUserId}`)
         res.json(translations);
-        logger.info(translations);
     } catch (err) {
         next(err);
     }
 };
+
+export const getSurveyProgress = async (req,res,next) => {
+    logger.toclient("GET INITIAL PROGRESS");
+    const { user_id } = req.session.anonymousUserId; // Assuming you have user authentication
+    try {
+      const result = await pool.query(
+        "SELECT current_step FROM anonymous_users WHERE anonymous_user_id = $1",
+        [user_id]
+      );
+      if (result.rows.length > 0) {
+        res.json({ currentStep: result.rows[0].current_step });
+      } else {
+        // MIGHT NOT BE NECESSARY TBH
+        await pool.query(
+            "UPDATE anonymous_users SET current_step = 0 WHERE anonymous_user_id = $1",
+            [user_id]
+          );
+        res.status(200).json({ currentStep: 0 });
+      }
+    } catch (err) {
+      logger.error(err.message);
+      res.status(500).send("Server error");
+    };
+};
+
+export const updateSurveyProgress = async (req, res, next) => {
+    logger.toclient("POST updateSurveyProgress");
+    const { user_id } = req.session.anonymousUserId;
+    const { currentStep } = req.body;
+    try {
+      await pool.query(
+        "UPDATE anonymous_users SET current_step = $1 WHERE anonymous_user_id = $2",
+        [currentStep, user_id]
+      );
+      res.status(200).json({ message: "Progress updated" });
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send("Server error");
+    }
+}
