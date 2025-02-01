@@ -11,6 +11,18 @@ for (const envVar of requiredEnvVars) {
   }
 }
 
+/**
+ * Creates a new PostgreSQL connection pool using the provided configuration.
+ * 
+ * The configuration is sourced from environment variables:
+ * - PG_USER: The username for the PostgreSQL database.
+ * - PG_HOST: The host address of the PostgreSQL database.
+ * - PG_DATABASE: The name of the PostgreSQL database.
+ * - PG_PASSWORD: The password for the PostgreSQL database.
+ * - PG_PORT: The port number on which the PostgreSQL database is running.
+ * 
+ * @type {pg.Pool}
+ */
 const pool = new pg.Pool({
   user: process.env.PG_USER,
   host: process.env.PG_HOST,
