@@ -6,7 +6,7 @@
  * @param {Function} next - Express next middleware function.
  * @returns {Promise<void>}
  */
-export const getMunicipalities = async (req, res, next) => {};
+// export const getMunicipalities = async (req, res, next) => {};
 
 /**
  * Get all languages.
@@ -16,7 +16,7 @@ export const getMunicipalities = async (req, res, next) => {};
  * @param {Function} next - Express next middleware function.
  * @returns {Promise<void>}
  */
-export const getLanguageSelect = async (req, res, next) => {};
+// export const getLanguageSelect = async (req, res, next) => {};
 
 /**
  * Get localization texts based on language and component.
@@ -26,7 +26,7 @@ export const getLanguageSelect = async (req, res, next) => {};
  * @param {Function} next - Express next middleware function.
  * @returns {Promise<void>}
  */
-export const getTexts = async (req, res, next) => {};
+// export const getTexts = async (req, res, next) => {};
 
 /**
  * Get survey progress for an anonymous user.
@@ -36,7 +36,7 @@ export const getTexts = async (req, res, next) => {};
  * @param {Function} next - Express next middleware function.
  * @returns {Promise<void>}
  */
-export const getSurveyProgress = async (req, res, next) => {};
+// export const getSurveyProgress = async (req, res, next) => {};
 
 /**
  * Update survey progress for an anonymous user.
@@ -46,19 +46,13 @@ export const getSurveyProgress = async (req, res, next) => {};
  * @param {Function} next - Express next middleware function.
  * @returns {Promise<void>}
  */
-export const updateSurveyProgress = async (req, res, next) => {};
+// export const updateSurveyProgress = async (req, res, next) => {};
 // controllers/clientController.js
 import pool from "../config/db.js";
 import logger from "../middleware/logger.js";
 
 
-
-
-
-
-
-
-getMunicipalities = async (req, res, next) => {
+export const getMunicipalities = async (req, res, next) => {
     logger.info("GET /api/municipalities");
     if (!process.env.PG_MUNICIPALITIES) {
         return next(new Error('PG_MUNICIPALITIES environment variable is not set')); // Pass error to error handler
@@ -72,7 +66,7 @@ getMunicipalities = async (req, res, next) => {
     }
 };
 
-getLanguageSelect = async (req, res, next) => {
+export const getLanguageSelect = async (req, res, next) => {
     logger.info("GET /api/languages");
     try {
         const query = 'SELECT * FROM languages';
@@ -82,7 +76,7 @@ getLanguageSelect = async (req, res, next) => {
         next(err);
     }
 };
-getTexts = async (req, res, next) => {
+export const getTexts = async (req, res, next) => {
     logger.info("GET /api/texts");
     const language = req.query.language || 'en';
     const component = req.query.component || 'mainpurpose';
@@ -104,7 +98,7 @@ getTexts = async (req, res, next) => {
     }
 };
 
-getSurveyProgress = async (req,res,next) => {
+export const getSurveyProgress = async (req,res,next) => {
     logger.toclient("GET INITIAL PROGRESS");
     const { user_id } = req.session.anonymousUserId; // Assuming you have user authentication
     try {
@@ -128,10 +122,11 @@ getSurveyProgress = async (req,res,next) => {
     };
 };
 
-updateSurveyProgress = async (req, res, next) => {
+export const updateSurveyProgress = async (req, res, next) => {
     logger.toclient("POST updateSurveyProgress");
-    const { user_id } = req.session.anonymousUserId;
+    const user_id  = req.session.anonymousUserId;
     const { currentStep } = req.body;
+    logger.warn(`USP -- USER ${req.session.anonymousUserId} with ${currentStep}`)
     try {
       await pool.query(
         "UPDATE anonymous_users SET current_step = $1 WHERE anonymous_user_id = $2",
