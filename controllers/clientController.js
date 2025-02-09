@@ -98,9 +98,19 @@ export const getTexts = async (req, res, next) => {
     }
 };
 
+/**
+ * Retrieves the current survey progress for an anonymous user.
+ *
+ * @param {Object} req - The request object.
+ * @param {Object} req.session - The session object.
+ * @param {string} req.session.anonymousUserId - The ID of the anonymous user.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete.
+ */
 export const getSurveyProgress = async (req,res,next) => {
-    logger.toclient("GET INITIAL PROGRESS");
-    const { user_id } = req.session.anonymousUserId; // Assuming you have user authentication
+    logger.toclient("GETSURVEYPROGRESS - ")
+    const  user_id  = req.session.anonymousUserId; // Assuming you have user authentication
     try {
       const result = await pool.query(
         "SELECT current_step FROM anonymous_users WHERE anonymous_user_id = $1",
