@@ -6,6 +6,8 @@ import pool from '../config/db.js';
 import { addHFToken, getHFTokenByLabel, getHFTokens } from '../services/hfTokenService.js';
 import { queryHuggingFace } from '../services/huggingFaceService.js';
 import { logEmitter } from '../middleware/logger.js';
+import dotenv from 'dotenv';
+dotenv.config();
 
 export const getAdminData = async (req, res, next) => {
   logger.info("GET /api/admin/data");
@@ -105,6 +107,9 @@ export const gethftokens = async (req, res) => {
 };
 
 export const analyzeSentiment = async (req, res) => {
+  logger.info("POST /api/admin/analyzesentiment");
+
+
   const text = req.body.text;
   const tokenLabel = req.body.tokenLabel;
   logger.info(`Analyzing sentiment:, ${text}`);
@@ -118,7 +123,7 @@ export const analyzeSentiment = async (req, res) => {
     }
 
     // Call the Hugging Face API
-    const analysisResult = await queryHuggingFace(text, apiToken);
+    const analysisResult = await queryHuggingFace(text, apiToken, process.env.BERTSENT_ENDPOINT);
 
     // Return the analysis result to the frontend
     res.json(analysisResult);
@@ -128,10 +133,13 @@ export const analyzeSentiment = async (req, res) => {
   }
 };
 export const analyzeTopics = async (req, res) => {
+  logger.info("POST /api/admin/analyzetopics");
+
   const text = req.body.text;
   const tokenLabel = req.body.tokenLabel;
   logger.info(`Analyzing topics: ${text}`);
   logger.info(`Using API token label: ${tokenLabel}`);
+  logger.info(`Using endpoint: ${process.env.BERTOPIC_ENDPOINT}`)
   try {
     // Fetch the decrypted API token from the database using the label
     const apiToken = await getHFTokenByLabel(tokenLabel); // Ensure this function is implemented in hfTokenService.js
@@ -140,8 +148,7 @@ export const analyzeTopics = async (req, res) => {
       return res.status(400).json({ error: 'Invalid API token label' });
     }
 
-    // ==================DUMMY==================
-    const analysisResult = null; //await queryHuggingFace(text, apiToken); // Ensure the queryHuggingFace function can handle topic analysis
+    const analysisResult = await queryHuggingFace(text, apiToken, process.env.BERTOPIC_ENDPOINT); 
 
     // Return the analysis result to the frontend
     res.json(analysisResult);

@@ -23,7 +23,7 @@ router.get('/metrics', getMetrics);
 router.post('/api/hf-tokens', posthftokens);
 router.get('/api/hf-tokens', authenticate, gethftokens);
 router.post('/api/analyzesentiment', analyzeSentiment);
-router.post('/api/analyzesentiment', analyzeTopics);
+router.post('/api/analyzetopics', analyzeTopics);
 
 router.get('/api/admin/anonymous-users', fetchAnonymousUsersController);
 // router.get('api/log-stream', logstream)
