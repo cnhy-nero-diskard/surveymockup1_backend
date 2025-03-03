@@ -1,5 +1,5 @@
 // controllers/adminController.js
-import { getAdminDataFromDB, updateTourismAttraction, addTourismAttraction, fetchTourismAttraction, deleteTourismAttraction, fetchAnonymousUsers } from '../services/adminService.js';
+import { getAdminDataFromDB, updateTourismAttraction, addTourismAttraction, fetchTourismAttraction, deleteTourismAttraction, fetchAnonymousUsers, getEstablishmentEnglishNames } from '../services/adminService.js';
 import logger from '../middleware/logger.js';
 import { validationResult } from 'express-validator';
 import pool from '../config/db.js';
@@ -187,3 +187,13 @@ export const logstream = async (req, res, next) => {
     logEmitter.off('log', sendLog);
   });
 };
+
+export const getEstablishmentEnglishNamesController = async (req, res, next) => {
+  logger.info("GET /api/admin/establishments");
+  try {
+    const englishNames = await getEstablishmentEnglishNames();
+    res.json(englishNames);
+  } catch (err) {
+    next(err); 
+};
+}

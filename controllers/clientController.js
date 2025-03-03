@@ -50,6 +50,8 @@
 // controllers/clientController.js
 import pool from "../config/db.js";
 import logger from "../middleware/logger.js";
+import { getTourismAttractionLocalizations } from "../services/clientService.js";
+import { submitSurveyResponse } from "../services/surveyService.js";
 
 
 export const getMunicipalities = async (req, res, next) => {
@@ -148,3 +150,56 @@ export const updateSurveyProgress = async (req, res, next) => {
       res.status(500).send("Server error");
     }
 }
+
+export const getTourismAttractionNames = async (req, res, next) => {
+  logger.warn('GET  /api/tourism-attractions LIST');
+  const { languageCode } = req.query;
+
+  if (!languageCode) {
+    return res.status(400).json({ error: 'Language code is required' });
+  }
+
+  try {
+    const translatedNames = await getTourismAttractionLocalizations(languageCode);
+    res.json({ translatedNames });
+  } catch (err) {
+    logger.error(err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+export const submitEstablishmentSurveyResponse = async (req, res, next) => {
+  logger.info('POST /api/survey/establishmentTPENT')
+  let idx  = req.body.idx; // Assuming the integer is passed in the request body
+  const anonymousUserId = req.session.anonymousUserId; // Get the anonymous user ID from the session
+  logger.warn(idx);
+  if (!idx) {
+      return res.status(400).json({ error: 'idx is required' });
+  }
+
+  try {
+      idx = parseInt(idx, 10);
+      const query = 'SELECT est_name FROM establishments WHERE id = $1';
+      const result = await pool.query(query, [idx]);
+      logger.warn(result.rowCount);
+      logger.warn(JSON.stringify(result.rows[0]));
+      if (result.rows.length === 0) {
+          return res.status(404).json({ error: 'Establishment not found' });
+      }
+
+      const estName = result.rows[0].est_name;
+
+      // Prepare the survey response object
+      const surveyResponse = {
+          surveyquestion_ref: 'TPENT',
+          response_value: estName
+      };
+
+      // Submit the survey response
+      const response = await submitSurveyResponse(surveyResponse, anonymousUserId);
+
+      res.status(200).json({ message: 'Survey response submitted successfully', response });
+  } catch (err) {
+      next(err);
+  }
+};

@@ -1,5 +1,7 @@
 // services/adminService.js
+import { Logger } from "winston";
 import pool from "../config/db.js";
+import logger from "../middleware/logger.js";
 
 export const getAdminDataFromDB = async () => {
   const result = await pool.query('SELECT * FROM admin_table'); // Replace with your actual admin table
@@ -63,10 +65,17 @@ export const updateTourismAttraction = async (id, updatedAttraction) => {
 };
 
 export const fetchAnonymousUsers = async () => {
+  
   const query = `
         SELECT * FROM anonymous_users
         ORDER BY is_Active DESC, created_at DESC;
     `;
   const result = await pool.query(query);
   return result.rows;
+};
+export const getEstablishmentEnglishNames = async () => {
+  const query = 'SELECT id, est_name FROM establishments WHERE TRUE';
+  const result = await pool.query(query);
+  const formattedResult = result.rows.map(row => ({ id: row.id, est_name: row.est_name }));
+  return formattedResult;
 };

@@ -1,6 +1,6 @@
 // routes/clientRoutes.js
 import express from 'express';
-import { getMunicipalities, getLanguageSelect, getTexts, getSurveyProgress, updateSurveyProgress } from '../controllers/clientController.js';
+import { getMunicipalities, getLanguageSelect, getTexts, getSurveyProgress, updateSurveyProgress, getTourismAttractionNames, submitEstablishmentSurveyResponse } from '../controllers/clientController.js';
 import { submitSurveyResponseController, fetchSurveyResponsesController } from '../controllers/surveyController.js';
 import { handleAnonymousUser } from '../middleware/anonymousUserMiddleware.js';
 import logger from '../middleware/logger.js';
@@ -16,7 +16,9 @@ router.get('/api/municipalities', getMunicipalities);
 router.get('/api/languageselect', getLanguageSelect);
 router.get('/api/texts', getTexts);
 router.get('/api/survey/progress', getSurveyProgress);
+router.get('/api/survey/attraction', getTourismAttractionNames);
 router.post('/api/survey/progress', updateSurveyProgress);
+router.post('/api/survey/establishment', submitEstablishmentSurveyResponse);
 
 router.post('/api/survey/submit', submitSurveyResponseController);
 router.get('/api/survey/responses/:user_id', fetchSurveyResponsesController);

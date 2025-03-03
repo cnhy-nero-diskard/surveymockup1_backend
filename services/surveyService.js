@@ -14,8 +14,9 @@ import logger from '../middleware/logger.js';
  * @throws {Error} If there is an issue with the database query.
  */
 export const submitSurveyResponse = async (response, anonymousUserId) => {
-    const logtext = `[POST][SURVEY_RESPONSES] -- UserID ${anonymousUserId} has SUBMITTED ${response.surveyquestion_ref}`
+    const logtext = `[POST][SURVEY_RESPONSES] -- UserID ${anonymousUserId} has SUBMITTED ${response.surveyquestion_ref}`;
     logger.database(logtext);
+
     const query = `
         INSERT INTO survey_responses (
             anonymous_user_id, 
@@ -23,17 +24,25 @@ export const submitSurveyResponse = async (response, anonymousUserId) => {
             response_value
         )
         VALUES ($1, $2, $3)
+        ON CONFLICT (anonymous_user_id, surveyquestion_ref)
+        DO UPDATE SET 
+            response_value = EXCLUDED.response_value
         RETURNING *;
     `;
 
     const values = [
         anonymousUserId, 
-        response.surveyquestion_ref, // Ensure this is a string of less than 10 characters
-        response.response_value,    // Ensure this is a JSONB-compatible object
+        response.surveyquestion_ref,
+        response.response_value,    
     ];
 
-    const result = await pool.query(query, values);
-    return result.rows[0];
+    try {
+        const result = await pool.query(query, values);
+        return result.rows[0];
+    } catch (err) {
+        logger.error(`Error submitting survey response: ${err.message}`);
+        throw err;
+    }
 };
 
 export const fetchSurveyResponsesByUser = async (user_id, anonymousUserId) => {
