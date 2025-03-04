@@ -95,3 +95,30 @@ export const fetchOpenEndedSurveyResponses = async () => {
     logger.error(err.message);
   }
 };
+
+export const fetchAllSurveyResponses = async () => {
+  try {
+    const query = `
+      SELECT 
+        anonymous_user_id,
+        JSON_AGG(
+          JSON_BUILD_OBJECT(
+            'response_id', response_id,
+            'surveyquestion_ref', surveyquestion_ref,
+            'created_at', created_at,
+            'is_analyzed', is_analyzed,
+            'response_value', response_value
+          )
+        ) AS responses
+      FROM survey_responses
+      GROUP BY anonymous_user_id
+      ORDER BY anonymous_user_id;
+    `;
+    const result = await pool.query(query);
+    logger.info(`Fetched all survey responses, grouped by anonymous_user_id: ${result.rows.length} users found`);
+    return result.rows;
+  } catch (err) {
+    logger.error(`Error fetching all survey responses: ${err.message}`);
+    throw err;
+  }
+};
