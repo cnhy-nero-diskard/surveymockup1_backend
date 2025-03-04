@@ -4,7 +4,7 @@ import logger from "../middleware/logger.js";
 
 
 // Function to create a new localization entry in the database
-export const createLocalizationService = async (key, languageCode, textContent, component) => {
+export const createLocalizationService = async (key, language_code, textContent, component) => {
   logger.database("METHOD api/admin/localization - CREATE");
   try {
     // SQL query to insert a new localization record
@@ -13,7 +13,7 @@ export const createLocalizationService = async (key, languageCode, textContent, 
       VALUES ($1, $2, $3, $4)
       RETURNING *;
     `;
-    const values = [key, languageCode, textContent, component];
+    const values = [key, language_code, textContent, component];
     // Execute the query with the provided values
     const result = await pool.query(query, values);
     // Return the newly created row
