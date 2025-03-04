@@ -8,7 +8,7 @@ import { queryHuggingFace } from '../services/huggingFaceService.js';
 import { logEmitter } from '../middleware/logger.js';
 import dotenv from 'dotenv';
 import { response } from 'express';
-import { createLocalizationService, deleteLocalizationService, fetchLocalizationsService, updateLocalizationService } from '../services/adminCRUD.js';
+import { createEstablishmentService, createLocalizationService, createTourismAttractionService, deleteEstablishmentService, deleteLocalizationService, deleteSurveyResponseService, deleteTourismAttractionService, fetchEstablishmentsService, fetchLocalizationsService, fetchSurveyResponsesService, fetchTourismAttractionsService, updateEstablishmentService, updateLocalizationService, updateSurveyResponseService, updateTourismAttractionService } from '../services/adminCRUD.js';
 dotenv.config();
 
 export const getAdminData = async (req, res, next) => {
@@ -36,46 +36,46 @@ export const addTourismAttractionController = async (req, res, next) => {
     next(err); // Pass error to error handler
   }
 };
+//come back to this. not sure what frontend uses this
+// export const fetchTourismAttractionsController = async (req, res, next) => {
+//   logger.info("GET /api/admin/fetch");
+//   try {
+//     const attractions = await fetchTourismAttraction();
+//     res.json(attractions);
+//   } catch (err) {
+//     next(err);
+//   }
+// }
 
-export const fetchTourismAttractionsController = async (req, res, next) => {
-  logger.info("GET /api/admin/fetch");
-  try {
-    const attractions = await fetchTourismAttraction();
-    res.json(attractions);
-  } catch (err) {
-    next(err);
-  }
-}
 
+// export const deleteTourismAttractionController = async (req, res, next) => {
+//   logger.info("DELETE /api/admin/delete/:id");
+//   const errors = validationResult(req);
+//   if (!errors.isEmpty()) {
+//     return res.status(400).json({ errors: errors.array() });
+//   }
 
-export const deleteTourismAttractionController = async (req, res, next) => {
-  logger.info("DELETE /api/admin/delete/:id");
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
+//   try {
+//     const response = req.body;
+//     const result = await submitSurveyResponse(response);
+//     res.status(201).json(result);
+//   } catch (err) {
+//     console.error('Error submitting survey response:', err);
+//     res.status(500).json({ error: 'Failed to submit survey response' });
+//   }
+// };
 
-  try {
-    const response = req.body;
-    const result = await submitSurveyResponse(response);
-    res.status(201).json(result);
-  } catch (err) {
-    console.error('Error submitting survey response:', err);
-    res.status(500).json({ error: 'Failed to submit survey response' });
-  }
-};
-
-export const updateTourismAttractionController = async (req, res, next) => {
-  logger.info("PUT /api/admin/update/:id");
-  try {
-    const { id } = req.params;
-    const updatedAttraction = req.body;
-    const result = await updateTourismAttraction(id, updatedAttraction);
-    res.json(result);
-  } catch (err) {
-    next(err);
-  }
-};
+// export const updateTourismAttractionController = async (req, res, next) => {
+//   logger.info("PUT /api/admin/update/:id");
+//   try {
+//     const { id } = req.params;
+//     const updatedAttraction = req.body;
+//     const result = await updateTourismAttraction(id, updatedAttraction);
+//     res.json(result);
+//   } catch (err) {
+//     next(err);
+//   }
+// };
 
 export const getAdminSessionData = async (req, res, next) => {
   logger.info("GET /api/admin/session-data");
@@ -150,7 +150,7 @@ export const analyzeTopics = async (req, res) => {
       return res.status(400).json({ error: 'Invalid API token label' });
     }
 
-    const analysisResult = await queryHuggingFace(text, apiToken, process.env.BERTOPIC_ENDPOINT); 
+    const analysisResult = await queryHuggingFace(text, apiToken, process.env.BERTOPIC_ENDPOINT);
 
     // Return the analysis result to the frontend
     res.json(analysisResult);
@@ -196,8 +196,8 @@ export const getEstablishmentEnglishNamesController = async (req, res, next) => 
     const englishNames = await getEstablishmentEnglishNames();
     res.json(englishNames);
   } catch (err) {
-    next(err); 
-};
+    next(err);
+  };
 }
 
 export const getOpenEndedSurveyResponses = async (req, res, next) => {
@@ -222,7 +222,7 @@ export const createLocalization = async (req, res, next) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const result = await createLocalizationService( key, languagecode, textContent, component);
+    const result = await createLocalizationService(key, languagecode, textContent, component);
     res.status(201).json(`SUCCESSFULLY INSERTED ROW`);
   } catch (err) {
     next(`ERROR ON CREATING A ROW on LOCALIZATION: ${err}`);
@@ -232,7 +232,7 @@ export const createLocalization = async (req, res, next) => {
 export const fetchLocalization = async (req, res, next) => {
   logger.info("GET /api/admin/localization");
   try {
-    const result = await fetchLocalizationsService({ });
+    const result = await fetchLocalizationsService({});
     res.json(result);
   } catch (err) {
     next(`ERROR ON FETCHING FROM LOCALIZATION: ${err}`);
@@ -240,17 +240,17 @@ export const fetchLocalization = async (req, res, next) => {
 };
 
 export const updateLocalization = async (req, res, next) => {
-  logger.info("PUT /api/admin/localization/:id");
+  logger.info("PUT /api/admin/localization");
   logger.warn(`CRL --- ${JSON.stringify(req.body)}`);
 
   try {
-    const {id, key, languagecode, textContent, component } = req.body;
+    const { id, key, languagecode, textContent, component } = req.body;
     // Validate required fields
     if (!id || !key || !languagecode || !textContent || !component) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const result = await updateLocalizationService( id, key, languagecode, textContent, component );
+    const result = await updateLocalizationService(id, key, languagecode, textContent, component);
 
     // Implementation will be in service layer
     res.json({ message: `Localization ${id} updated successfully` });
@@ -260,16 +260,16 @@ export const updateLocalization = async (req, res, next) => {
 };
 
 export const deleteLocalization = async (req, res, next) => {
-  logger.info("DELETE /api/admin/localization/:id");
+  logger.info("DELETE /api/admin/localization");
   try {
     const { id } = req.body;
-    
+
     // Validate required fields
     if (!id) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const result = await deleteLocalizationService( id );
+    const result = await deleteLocalizationService(id);
 
     // Implementation will be in service layer
     res.json({ message: `Localization ${id} deleted successfully` });
@@ -278,6 +278,221 @@ export const deleteLocalization = async (req, res, next) => {
   }
 };
 
-// export const createEstablishment = async (req, res, next) {
+export const createEstablishment = async (req, res, next) => {
+  logger.info("POST /api/admin/establishment");
+  try {
+    const {
+      estName, type, cityMun, barangay, latitude, longitude,
+      english, korean, chinese, japanese, russian, french, spanish, hindi
+    } = req.body;
 
-// }
+    // Validate required fields
+    if (!estName || !type || !cityMun || !barangay || !latitude || !longitude) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const result = await createEstablishmentService(
+      estName, type, cityMun, barangay, latitude, longitude,
+      english, korean, chinese, japanese, russian, french, spanish, hindi
+    );
+
+    res.status(201).json(result);
+  } catch (err) {
+    next(`ERROR ON CREATING A ROW IN ESTABLISHMENTS: ${err}`);
+  }
+};
+
+export const fetchEstablishments = async (req, res, next) => {
+  logger.info("GET /api/admin/establishments");
+  try {
+    const filters = {
+      estName: req.query.estName,
+      type: req.query.type,
+      cityMun: req.query.cityMun,
+      barangay: req.query.barangay
+    };
+
+    const establishments = await fetchEstablishmentsService(filters);
+    res.json(establishments);
+  } catch (err) {
+    next(`ERROR ON FETCHING FROM ESTABLISHMENTS: ${err}`);
+  }
+};
+export const updateEstablishment = async (req, res, next) => {
+  logger.info("PUT /api/admin/establishments");
+  try {
+    const {
+      id, estName, type, cityMun, barangay, latitude, longitude,
+      english, korean, chinese, japanese, russian, french, spanish, hindi
+    } = req.body;
+
+    // Validate required fields
+    if (!id || !estName || !type || !cityMun || !barangay || !latitude || !longitude) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const result = await updateEstablishmentService(
+      id, estName, type, cityMun, barangay, latitude, longitude,
+      english, korean, chinese, japanese, russian, french, spanish, hindi
+    );
+
+    res.json({ message: `Establishment ${id} updated successfully`, establishment: result });
+  } catch (err) {
+    next(`ERROR ON UPDATING ROW IN ESTABLISHMENTS: ${err}`);
+  }
+}
+
+export const deleteEstablishment = async (req, res, next) => {
+  logger.info("DELETE /api/admin/establishments");
+  try {
+    const { id } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ error: 'Missing required id' });
+    }
+
+    const result = await deleteEstablishmentService(id);
+    res.json({ message: `Establishment ${id} deleted successfully`, establishment: result });
+  } catch (err) {
+    next(`ERROR ON DELETING ROW FROM ESTABLISHMENTS: ${err}`);
+  }
+};
+export const createTourismAttractionController = async (req, res, next) => {
+  logger.info("POST /api/admin/tourismattractions");
+  try {
+    const {
+      taName, typeCode, region, provHuc, cityMun, reportYear, brgy,
+      latitude, longitude, taCategory, ntdpCategory, devtLvl, mgt, onlineConnectivity
+    } = req.body;
+
+    if (!taName || !typeCode || !region || !provHuc || !cityMun || !reportYear) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const result = await createTourismAttractionService(
+      taName, typeCode, region, provHuc, cityMun, reportYear, brgy,
+      latitude, longitude, taCategory, ntdpCategory, devtLvl, mgt, onlineConnectivity
+    );
+
+    res.status(201).json(result);
+  } catch (err) {
+    next(`ERROR ON CREATING TOURISM ATTRACTION: ${err}`);
+  }
+};
+export const fetchTourismAttractionController = async (req, res, next) => {
+  logger.info("GET /api/admin/tourismattractions");
+  try {
+    const filters = {
+      taName: req.query.taName,
+      typeCode: req.query.typeCode, 
+      region: req.query.region,
+      cityMun: req.query.cityMun,
+      reportYear: req.query.reportYear,
+      taCategory: req.query.taCategory
+    };
+
+    const attractions = await fetchTourismAttractionsService(filters);
+    res.json(attractions);
+  } catch (err) {
+    next(`ERROR ON FETCHING TOURISM ATTRACTIONS: ${err}`);
+  }
+};
+export const updateTourismAttractionController = async (req, res, next) => {
+  logger.info("PUT /api/admin/tourismattractions");
+  try {
+    const {
+      id, taName, typeCode, region, provHuc, cityMun, reportYear, brgy,
+      latitude, longitude, taCategory, ntdpCategory, devtLvl, mgt, onlineConnectivity
+    } = req.body;
+
+    if (!id || !taName || !typeCode || !region || !provHuc || !cityMun || !reportYear) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const result = await updateTourismAttractionService(
+      id, taName, typeCode, region, provHuc, cityMun, reportYear, brgy,
+      latitude, longitude, taCategory, ntdpCategory, devtLvl, mgt, onlineConnectivity
+    );
+
+    res.json({ message: `Tourism attraction ${id} updated successfully`, attraction: result });
+  } catch (err) {
+    next(`ERROR ON UPDATING TOURISM ATTRACTION: ${err}`);
+  }
+};
+
+export const deleteTourismAttractionController = async (req, res, next) => {
+  logger.info("DELETE /api/admin/tourismattractions");
+  try {
+    const { id } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ error: 'Missing required id' });
+    }
+
+    const result = await deleteTourismAttractionService(id);
+    res.json({ message: `Tourism attraction ${id} deleted successfully`, attraction: result });
+  } catch (err) {
+    next(`ERROR ON DELETING TOURISM ATTRACTION: ${err}`);
+  }
+};
+
+//this is kinda impossible/impractical to do since survey_responses has a tightly integrated fkeys and structure matters
+export const createSurveyResponseController = async (req, res, next) => {
+  logger.info("POST /api/admin/survey-response");
+  try {
+    const { anonymous_user_id, surveyquestion_ref, response_value } = req.body;
+
+    if (!anonymous_user_id || !surveyquestion_ref || !response_value) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const result = await createSurveyResponse(anonymous_user_id, surveyquestion_ref, response_value);
+    res.status(201).json(result);
+  } catch (err) {
+    next(`ERROR ON CREATING SURVEY RESPONSE: ${err}`);
+  }
+};
+
+export const fetchSurveyResponsesController = async (req, res, next) => {
+  logger.info("GET /api/admin/survey-responses");
+  try {
+    const anonid = req.query.anonid || null;
+    logger.warn(`PROVIDED ANONID: ${anonid}`);
+    const responses = await fetchSurveyResponsesService(anonid);
+    res.json(responses);
+  } catch (err) {
+    next(`ERROR ON FETCHING SURVEY RESPONSES: ${err}`);
+  }
+};
+
+export const updateSurveyResponseController = async (req, res, next) => {
+  logger.info("PUT /api/admin/survey-responses");
+  try {
+    const { response_id, response_value } = req.body;
+
+    if (!response_id || !response_value) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const result = await updateSurveyResponseService(response_id, response_value);
+    res.json({ message: `Survey response ${response_id} updated successfully`, response: result });
+  } catch (err) {
+    next(`ERROR ON UPDATING SURVEY RESPONSE: ${err}`);
+  }
+};
+
+export const deleteSurveyResponseController = async (req, res, next) => {
+  logger.info("DELETE /api/admin/survey-responses");
+  try {
+    const { anonymous_user_id } = req.body;
+
+    if (!anonymous_user_id) {
+      return res.status(400).json({ error: 'Missing required anonid' });
+    }
+
+    const result = await deleteSurveyResponseService(anonymous_user_id);
+    res.json({ message: `Survey response ${anonymous_user_id} deleted successfully`, response: result });
+  } catch (err) {
+    next(`ERROR ON DELETING SURVEY RESPONSE: ${err}`);
+  }
+};

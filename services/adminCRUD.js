@@ -220,7 +220,7 @@ export const deleteEstablishmentService = async (id) => {
 };
 
 // Function to create a new tourism attraction entry in the database
-export const createTourismAttraction = async (
+export const createTourismAttractionService = async (
   taName, typeCode, region, provHuc, cityMun, reportYear, brgy,
   latitude, longitude, taCategory, ntdpCategory, devtLvl, mgt, onlineConnectivity
 ) => {
@@ -249,7 +249,7 @@ export const createTourismAttraction = async (
 };
 
 // Function to fetch tourism attractions based on optional filters
-export const fetchTourismAttractions = async (filters = {}) => {
+export const fetchTourismAttractionsService = async (filters = {}) => {
   logger.database("METHOD api/admin/tourismattractions - READ");
   try {
     let query = `SELECT * FROM public.tourismattractions`;
@@ -297,7 +297,7 @@ export const fetchTourismAttractions = async (filters = {}) => {
 };
 
 // Function to update a tourism attraction entry
-export const updateTourismAttraction = async (
+export const updateTourismAttractionService = async (
   id, taName, typeCode, region, provHuc, cityMun, reportYear, brgy,
   latitude, longitude, taCategory, ntdpCategory, devtLvl, mgt, onlineConnectivity
 ) => {
@@ -326,7 +326,7 @@ export const updateTourismAttraction = async (
 };
 
 // Function to delete a tourism attraction entry by id
-export const deleteTourismAttraction = async (id) => {
+export const deleteTourismAttractionService = async (id) => {
   logger.database("METHOD api/admin/tourismattractions - DELETE");
   try {
     // SQL query to delete a tourism attraction record by id
@@ -346,7 +346,7 @@ export const deleteTourismAttraction = async (id) => {
 };
 
 // Function to create a new survey response entry
-export const createSurveyResponse = async (anonymous_user_id, surveyquestion_ref, response_value) => {
+export const createSurveyResponseService = async (anonymous_user_id, surveyquestion_ref, response_value) => {
   logger.database("METHOD api/admin/createSurveyResponse");
   try {
     // SQL query to insert a new survey response record
@@ -366,14 +366,21 @@ export const createSurveyResponse = async (anonymous_user_id, surveyquestion_ref
 };
 
 // Function to fetch all survey responses
-export const fetchAllSurveyResponses = async () => {
-  logger.database("METHOD api/admin/fetchAllSurveyResponses");
+// Function to fetch survey responses with optional ID filter
+export const fetchSurveyResponsesService = async (anonid = null) => {
+  logger.database("METHOD api/admin/fetchSurveyResponses");
   try {
-    const query = `
-      SELECT * FROM public.survey_responses;
-    `;
-    const result = await pool.query(query);
-    // Return all survey response rows
+    let query = 'SELECT * FROM public.survey_responses';
+    const values = [];
+
+    if (anonid && typeof anonid === 'string') {
+      query += ' WHERE anonymous_user_id = $1';
+      values.push(anonid);
+    }
+
+    const result = await pool.query(query, values);
+    // Always return all matching rows
+    logger.warn(result.rowCount)
     return result.rows;
   } catch (err) {
     logger.error(err.message);
@@ -381,26 +388,8 @@ export const fetchAllSurveyResponses = async () => {
   }
 };
 
-// Function to fetch a single survey response by its ID
-export const fetchSurveyResponseById = async (response_id) => {
-  logger.database("METHOD api/admin/fetchSurveyResponseById");
-  try {
-    const query = `
-      SELECT * FROM public.survey_responses
-      WHERE response_id = $1;
-    `;
-    const values = [response_id];
-    const result = await pool.query(query, values);
-    // Return the matching survey response row
-    return result.rows[0];
-  } catch (err) {
-    logger.error(err.message);
-    throw err;
-  }
-};
-
 // Function to update a survey response by response ID
-export const updateSurveyResponse = async (response_id, response_value) => {
+export const updateSurveyResponseService = async (response_id, response_value) => {
   logger.database("METHOD api/admin/updateSurveyResponse");
   try {
     // SQL query to update a survey response record
@@ -421,19 +410,19 @@ export const updateSurveyResponse = async (response_id, response_value) => {
 };
 
 // Function to delete a survey response by response ID
-export const deleteSurveyResponse = async (response_id) => {
+export const deleteSurveyResponseService = async (anonymous_user_id) => {
   logger.database("METHOD api/admin/deleteSurveyResponse");
   try {
-    // SQL query to delete a survey response record
+    // SQL query to delete all survey response records for a given anonymous_user_id
     const query = `
       DELETE FROM public.survey_responses
-      WHERE response_id = $1
+      WHERE anonymous_user_id = $1 AND $1 IS NOT NULL
       RETURNING *;
     `;
-    const values = [response_id];
+    const values = [anonymous_user_id];
     const result = await pool.query(query, values);
-    // Return the deleted survey response row
-    return result.rows[0];
+    // Return all deleted survey response rows
+    return result.rows;
   } catch (err) {
     logger.error(err.message);
     throw err;
