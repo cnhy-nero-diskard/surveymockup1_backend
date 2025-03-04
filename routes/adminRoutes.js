@@ -32,6 +32,11 @@ router.get('/api/admin/localization',  fetchLocalization);
 router.put('/api/admin/localization', updateLocalization);
 router.delete('/api/admin/localization', deleteLocalization);
 
+router.post('/api/admin/localization', createLocalization);
+router.get('/api/admin/localization',  fetchLocalization);
+router.put('/api/admin/localization', updateLocalization);
+router.delete('/api/admin/localization', deleteLocalization);
+
 
 
 router.get('/api/admin/anonymous-users', fetchAnonymousUsersController);

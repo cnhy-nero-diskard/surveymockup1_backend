@@ -241,16 +241,17 @@ export const fetchLocalization = async (req, res, next) => {
 
 export const updateLocalization = async (req, res, next) => {
   logger.info("PUT /api/admin/localization/:id");
+  logger.warn(`CRL --- ${JSON.stringify(req.body)}`);
+
   try {
-    const { key, languagecode, textContent, component } = req.body;
+    const {id, key, languagecode, textContent, component } = req.body;
     // Validate required fields
-    if (!key || !languagecode || !textContent || !component) {
+    if (!id || !key || !languagecode || !textContent || !component) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const result = await updateLocalizationService({ key, languagecode, textContent, component });
+    const result = await updateLocalizationService( id, key, languagecode, textContent, component );
 
-    const { id } = req.params;
     // Implementation will be in service layer
     res.json({ message: `Localization ${id} updated successfully` });
   } catch (err) {
@@ -261,19 +262,22 @@ export const updateLocalization = async (req, res, next) => {
 export const deleteLocalization = async (req, res, next) => {
   logger.info("DELETE /api/admin/localization/:id");
   try {
-    const { key, languagecode, textContent, component } = req.body;
+    const { id } = req.body;
     
     // Validate required fields
-    if (!key || !languagecode || !textContent || !component) {
+    if (!id) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const result = await deleteLocalizationService({ key, languagecode, textContent, component });
+    const result = await deleteLocalizationService( id );
 
-    const { id } = req.params;
     // Implementation will be in service layer
     res.json({ message: `Localization ${id} deleted successfully` });
   } catch (err) {
     next(`ERROR ON DELETING ROW FROM LOCALIZATION: ${err}`);
   }
 };
+
+export const createEstablishment = async (req, res, next) {
+  
+}

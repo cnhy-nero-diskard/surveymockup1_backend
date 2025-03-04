@@ -102,7 +102,7 @@ export const deleteLocalizationService = async (id) => {
 };
 
 // Function to create a new establishment entry in the database
-export const createEstablishment = async (
+export const createEstablishmentService = async (
   estName, type, cityMun, barangay, latitude, longitude,
   english, korean, chinese, japanese, russian, french, spanish, hindi
 ) => {
@@ -131,7 +131,7 @@ export const createEstablishment = async (
 };
 
 // Function to fetch establishments based on optional filters
-export const fetchEstablishments = async (filters = {}) => {
+export const fetchEstablishmentsService = async (filters = {}) => {
   logger.database("METHOD api/admin/establishments - READ");
   try {
     let query = `SELECT * FROM public.establishments`;
@@ -171,7 +171,7 @@ export const fetchEstablishments = async (filters = {}) => {
 };
 
 // Function to update an establishment entry
-export const updateEstablishment = async (
+export const updateEstablishmentService = async (
   id, estName, type, cityMun, barangay, latitude, longitude,
   english, korean, chinese, japanese, russian, french, spanish, hindi
 ) => {
@@ -200,7 +200,7 @@ export const updateEstablishment = async (
 };
 
 // Function to delete an establishment entry by id
-export const deleteEstablishment = async (id) => {
+export const deleteEstablishmentService = async (id) => {
   logger.database("METHOD api/admin/establishments - DELETE");
   try {
     // SQL query to delete an establishment record by id
