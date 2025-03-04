@@ -1,6 +1,6 @@
 // routes/adminRoutes.js
 import express from 'express';
-import { getAdminData, getAdminSessionData, updateTourismAttractionController, fetchTourismAttractionsController, addTourismAttractionController, deleteTourismAttractionController, posthftokens, gethftokens, analyzeSentiment, analyzeTopics, fetchAnonymousUsersController, logstream, getEstablishmentEnglishNamesController } from '../controllers/adminController.js';
+import { getAdminData, getAdminSessionData, updateTourismAttractionController, fetchTourismAttractionsController, addTourismAttractionController, deleteTourismAttractionController, posthftokens, gethftokens, analyzeSentiment, analyzeTopics, fetchAnonymousUsersController, logstream, getEstablishmentEnglishNamesController, getOpenEndedSurveyResponses } from '../controllers/adminController.js';
 import { authenticate, authorizeAdmin } from '../middleware/authMiddleware.js';
 import { submitSurveyResponseController } from '../controllers/surveyController.js';
 import { validateSurveyResponse } from '../middleware/validationMiddleware.js';
@@ -20,6 +20,7 @@ router.post('/api/survey/submit', validateSurveyResponse, submitSurveyResponseCo
 router.get('/api/admin/session-data', authenticate, getAdminSessionData);
 router.get('/metrics', getMetrics);
 router.get('/api/admin/establishments', getEstablishmentEnglishNamesController);
+router.get('/api/admin/survey-responses/open-ended', authenticate, getOpenEndedSurveyResponses);
 
 router.post('/api/hf-tokens', posthftokens);
 router.get('/api/hf-tokens', authenticate, gethftokens);

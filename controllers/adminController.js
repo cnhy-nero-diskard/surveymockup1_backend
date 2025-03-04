@@ -1,5 +1,5 @@
 // controllers/adminController.js
-import { getAdminDataFromDB, updateTourismAttraction, addTourismAttraction, fetchTourismAttraction, deleteTourismAttraction, fetchAnonymousUsers, getEstablishmentEnglishNames } from '../services/adminService.js';
+import { getAdminDataFromDB, updateTourismAttraction, addTourismAttraction, fetchTourismAttraction, deleteTourismAttraction, fetchAnonymousUsers, getEstablishmentEnglishNames, fetchOpenEndedSurveyResponses } from '../services/adminService.js';
 import logger from '../middleware/logger.js';
 import { validationResult } from 'express-validator';
 import pool from '../config/db.js';
@@ -197,3 +197,14 @@ export const getEstablishmentEnglishNamesController = async (req, res, next) => 
     next(err); 
 };
 }
+
+export const getOpenEndedSurveyResponses = async (req, res, next) => {
+  logger.info("GET /api/admin/survey-responses/open-ended");
+  try {
+    const responses = await fetchOpenEndedSurveyResponses();
+    logger.info(JSON.stringify(responses));
+    res.json(responses);
+  } catch (err) {
+    next(`ERROR ON SENDING A RESPONSE: ${err}`); // Pass error to error handler
+  }
+};

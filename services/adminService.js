@@ -65,7 +65,7 @@ export const updateTourismAttraction = async (id, updatedAttraction) => {
 };
 
 export const fetchAnonymousUsers = async () => {
-  
+
   const query = `
         SELECT * FROM anonymous_users
         ORDER BY is_Active DESC, created_at DESC;
@@ -78,4 +78,20 @@ export const getEstablishmentEnglishNames = async () => {
   const result = await pool.query(query);
   const formattedResult = result.rows.map(row => ({ id: row.id, est_name: row.est_name }));
   return formattedResult;
+};
+
+export const fetchOpenEndedSurveyResponses = async () => {
+  try {
+    const query = `
+    SELECT sr.response_id, sr.anonymous_user_id, sr.surveyquestion_ref, sr.created_at, sr.is_analyzed, sr.response_value
+    FROM survey_responses sr
+    JOIN survey_questions sq ON sr.surveyquestion_ref = sq.surveyresponses_ref
+    WHERE sq.questiontype = 'OPENENDED';
+  `;
+    const result = await pool.query(query);
+    logger.warn(`OPEN-ENDED SURVEY RESPONSES: ${result.rows.length}`);
+    return result.rows;
+  } catch (err) {
+    logger.error(err.message);
+  }
 };
