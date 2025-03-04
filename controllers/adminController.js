@@ -278,6 +278,6 @@ export const deleteLocalization = async (req, res, next) => {
   }
 };
 
-export const createEstablishment = async (req, res, next) {
-  
-}
+// export const createEstablishment = async (req, res, next) {
+
+// }
