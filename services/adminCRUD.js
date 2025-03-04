@@ -4,7 +4,7 @@ import logger from "../middleware/logger.js";
 
 
 // Function to create a new localization entry in the database
-export const createLocalization = async (key, languageCode, textContent, component) => {
+export const createLocalizationService = async (key, languageCode, textContent, component) => {
   logger.database("METHOD api/admin/localization - CREATE");
   try {
     // SQL query to insert a new localization record
@@ -25,7 +25,7 @@ export const createLocalization = async (key, languageCode, textContent, compone
 };
 
 // Function to fetch localizations based on optional filters
-export const fetchLocalizations = async (filters = {}) => {
+export const fetchLocalizationsService = async (filters = {}) => {
   logger.database("METHOD api/admin/localization - READ");
   try {
     let query = `SELECT * FROM public.localization00`;
@@ -61,7 +61,7 @@ export const fetchLocalizations = async (filters = {}) => {
 };
 
 // Function to update a localization entry
-export const updateLocalization = async (id, key, languageCode, textContent, component) => {
+export const updateLocalizationService = async (id, key, languageCode, textContent, component) => {
   logger.database("METHOD api/admin/localization - UPDATE");
   try {
     // SQL query to update a localization record by id
@@ -82,7 +82,7 @@ export const updateLocalization = async (id, key, languageCode, textContent, com
 };
 
 // Function to delete a localization entry by id
-export const deleteLocalization = async (id) => {
+export const deleteLocalizationService = async (id) => {
   logger.database("METHOD api/admin/localization - DELETE");
   try {
     // SQL query to delete a localization record by id

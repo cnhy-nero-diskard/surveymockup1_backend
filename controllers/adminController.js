@@ -7,6 +7,7 @@ import { addHFToken, getHFTokenByLabel, getHFTokens } from '../services/hfTokenS
 import { queryHuggingFace } from '../services/huggingFaceService.js';
 import { logEmitter } from '../middleware/logger.js';
 import dotenv from 'dotenv';
+import { response } from 'express';
 dotenv.config();
 
 export const getAdminData = async (req, res, next) => {
@@ -206,5 +207,82 @@ export const getOpenEndedSurveyResponses = async (req, res, next) => {
     res.json(responses);
   } catch (err) {
     next(`ERROR ON SENDING A RESPONSE: ${err}`); // Pass error to error handler
+  }
+};
+
+
+export const createLocalization = async (req, res, next) => {
+  logger.info("POST /api/admin/localization");
+  try {
+    const { key, languagecode, textContent, component } = req.body;
+    
+    // Validate required fields
+    if (!key || !languagecode || !textContent || !component) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const result = await createLocalization({ key, languagecode, textContent, component });
+    res.status(201).json(result);
+  } catch (err) {
+    next(`ERROR ON CREATING A ROW on LOCALIZATION: ${err}`);
+  }
+};
+
+export const getLocalization = async (req, res, next) => {
+  logger.info("GET /api/admin/localization");
+  try {
+    const { key, languagecode, textContent, component } = req.body;
+    
+    // Validate required fields
+    if (!key || !languagecode || !textContent || !component) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const result = await createLocalization({ key, languagecode, textContent, component });
+
+    // Implementation will be in service layer
+    res.json({ message: 'Localization retrieved successfully' });
+  } catch (err) {
+    next(`ERROR ON FETCHING FROM LOCALIZATION: ${err}`);
+  }
+};
+
+export const updateLocalization = async (req, res, next) => {
+  logger.info("PUT /api/admin/localization/:id");
+  try {
+    const { key, languagecode, textContent, component } = req.body;
+    
+    // Validate required fields
+    if (!key || !languagecode || !textContent || !component) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const result = await createLocalization({ key, languagecode, textContent, component });
+
+    const { id } = req.params;
+    // Implementation will be in service layer
+    res.json({ message: `Localization ${id} updated successfully` });
+  } catch (err) {
+    next(`ERROR ON UPDATING ROW IN LOCALIZATION: ${err}`);
+  }
+};
+
+export const deleteLocalization = async (req, res, next) => {
+  logger.info("DELETE /api/admin/localization/:id");
+  try {
+    const { key, languagecode, textContent, component } = req.body;
+    
+    // Validate required fields
+    if (!key || !languagecode || !textContent || !component) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const result = await createLocalization({ key, languagecode, textContent, component });
+
+    const { id } = req.params;
+    // Implementation will be in service layer
+    res.json({ message: `Localization ${id} deleted successfully` });
+  } catch (err) {
+    next(`ERROR ON DELETING ROW FROM LOCALIZATION: ${err}`);
   }
 };
