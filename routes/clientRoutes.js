@@ -1,6 +1,6 @@
 // routes/clientRoutes.js
 import express from 'express';
-import { getMunicipalities, getLanguageSelect, getTexts, getSurveyProgress, updateSurveyProgress, getTourismAttractionNames, submitEstablishmentSurveyResponse } from '../controllers/clientController.js';
+import { getMunicipalities, getLanguageSelect, getTexts, getSurveyProgress, updateSurveyProgress, getTourismAttractionNames, submitEstablishmentSurveyResponse, appendNewFeedback, getUserFeedback } from '../controllers/clientController.js';
 import { submitSurveyResponseController, fetchSurveyResponsesController } from '../controllers/surveyController.js';
 import { handleAnonymousUser } from '../middleware/anonymousUserMiddleware.js';
 import logger from '../middleware/logger.js';
@@ -26,9 +26,13 @@ router.get('/api/init-anonymous-user', handleAnonymousUser, (req, res) => {
     logger.info('GET /api/init-anonymous-user');
     res.status(200).send('Anonymous user ID initialized');
 });
+
 router.get("/survey/step/:step", validateSurveyStep, (req, res) => {
     const step = req.params.step;
     res.send(`You are on step ${step}`);
   });
+
+router.post('/api/survey/feedback',  appendNewFeedback);
+router.get('/api/survey/feedback',  getUserFeedback);
 
 export default router;

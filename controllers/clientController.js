@@ -168,6 +168,21 @@ export const getTourismAttractionNames = async (req, res, next) => {
   }
 };
 
+/**
+ * Handles the submission of an establishment survey response.
+ *
+ * @async
+ * @function submitEstablishmentSurveyResponse
+ * @param {Object} req - The request object.
+ * @param {Object} req.body - The body of the request.
+ * @param {number} req.body.idx - The index of the establishment.
+ * @param {Object} req.session - The session object.
+ * @param {string} req.session.anonymousUserId - The anonymous user ID from the session.
+ * @param {Object} res - The response object.
+ * @param {function} next - The next middleware function.
+ * @returns {Promise<void>} - A promise that resolves when the survey response is submitted.
+ * @throws {Error} - Throws an error if the survey response submission fails.
+ */
 export const submitEstablishmentSurveyResponse = async (req, res, next) => {
   logger.info('POST /api/survey/establishmentTPENT')
   let idx  = req.body.idx; // Assuming the integer is passed in the request body
@@ -198,8 +213,66 @@ export const submitEstablishmentSurveyResponse = async (req, res, next) => {
       // Submit the survey response
       const response = await submitSurveyResponse(surveyResponse, anonymousUserId);
 
-      res.status(200).json({ message: 'Survey response submitted successfully', response });
+      res.status(200).json(estName);
   } catch (err) {
       next(err);
+  }
+};
+
+export const appendNewFeedback = async (req, res, next) => {
+  const anonymousUserId = req.session.anonymousUserId; // Get the anonymous user ID from the session
+  const feedback = req.body; // Assuming the feedback is passed in the request body
+
+  logger.database("Appending new feedback to survey responses");
+  logger.warn(`FEEDBACK HUH -> ${JSON.stringify(feedback)}`);
+
+  try {
+    const query = `
+      UPDATE survey_responses
+      SET response_expandable = response_expandable || $1::jsonb
+      WHERE anonymous_user_id = $2 AND surveyquestion_ref = 'TPENT'
+      RETURNING *;
+    `;
+    
+    // Wrap feedback in an array before converting it to a JSON string
+    const values = [feedback, anonymousUserId];
+    
+    const result = await pool.query(query, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Survey response not found" });
+    }
+
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    logger.error(error.message);
+    res.status(500).send("Server error");
+  }
+};
+
+export const getUserFeedback = async (req, res, next) => {
+  const { anonymousUserId } = req.params; // Assuming user ID is in the route parameter
+
+  try {
+    const query = `
+      SELECT response_expandable FROM survey_responses 
+      WHERE anonymous_user_id = $1;
+    `;
+    const values = [anonymousUserId];
+
+    const result = await pool.query(query, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Survey response not found" });
+    }
+
+    // PostgreSQL returns jsonb[] as a string-like array, so we need to parse it
+    const jsonbArray = result.rows[0].response_expandable; // This is a JS array of JSON strings
+    const parsedArray = jsonbArray.map(item => JSON.parse(item)); // Convert each JSON string to an object
+
+    res.status(200).json(parsedArray); // Send as a proper array
+  } catch (error) {
+    console.error("Error fetching feedback:", error.message);
+    res.status(500).json({ error: "Server error" });
   }
 };
