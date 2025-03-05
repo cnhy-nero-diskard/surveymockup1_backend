@@ -215,14 +215,20 @@ export const getOpenEndedSurveyResponses = async (req, res, next) => {
 export const createLocalization = async (req, res, next) => {
   logger.info("POST /api/admin/localization");
   try {
-    const { key, languagecode, textContent, component } = req.body;
+    const { key, languagecode, textcontent, component } = req.body;
     logger.warn(`CRL --- ${JSON.stringify(req.body)}`);
     // Validate required fields
-    if (!key || !languagecode || !textContent || !component) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    const missingFields = [];
+    if (!key) missingFields.push('key');
+    if (!languagecode) missingFields.push('languagecode');
+    if (!textcontent) missingFields.push('textcontent');
+    if (!component) missingFields.push('component');
+
+    if (missingFields.length > 0) {
+      return res.status(400).json({ error: `Missing required fields', ${missingFields}` });
     }
 
-    const result = await createLocalizationService(key, languagecode, textContent, component);
+    const result = await createLocalizationService(key, languagecode, textcontent, component);
     res.status(201).json(`SUCCESSFULLY INSERTED ROW`);
   } catch (err) {
     next(`ERROR ON CREATING A ROW on LOCALIZATION: ${err}`);
@@ -244,13 +250,19 @@ export const updateLocalization = async (req, res, next) => {
   logger.warn(`CRL --- ${JSON.stringify(req.body)}`);
 
   try {
-    const { id, key, languagecode, textContent, component } = req.body;
+    const { id, key, languagecode, textcontent, component } = req.body;
     // Validate required fields
-    if (!id || !key || !languagecode || !textContent || !component) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    if (!id || !key || !languagecode || !textcontent || !component) {
+      const missingFields = [];
+      if (!id) missingFields.push('id');
+      if (!key) missingFields.push('key');
+      if (!languagecode) missingFields.push('languagecode');
+      if (!textcontent) missingFields.push('textcontent');
+      if (!component) missingFields.push('component');
+      return res.status(400).json({ error: `Missing required fields: ${missingFields.join(', ')}` });
     }
 
-    const result = await updateLocalizationService(id, key, languagecode, textContent, component);
+    const result = await updateLocalizationService(id, key, languagecode, textcontent, component);
 
     // Implementation will be in service layer
     res.json({ message: `Localization ${id} updated successfully` });
@@ -280,19 +292,28 @@ export const deleteLocalization = async (req, res, next) => {
 
 export const createEstablishment = async (req, res, next) => {
   logger.info("POST /api/admin/establishment");
+  logger.warn(`REQUEST BODY: ${JSON.stringify(req.body)}`);
   try {
     const {
-      estName, type, cityMun, barangay, latitude, longitude,
+      est_name, type, city_mun, barangay, latitude, longitude,
       english, korean, chinese, japanese, russian, french, spanish, hindi
     } = req.body;
 
     // Validate required fields
-    if (!estName || !type || !cityMun || !barangay || !latitude || !longitude) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    const missingFields = [];
+    if (!est_name) missingFields.push('est_name');
+    if (!type) missingFields.push('type');
+    if (!city_mun) missingFields.push('city_mun');
+    if (!barangay) missingFields.push('barangay');
+    if (!latitude) missingFields.push('latitude');
+    if (!longitude) missingFields.push('longitude');
+
+    if (missingFields.length > 0) {
+      return res.status(400).json({ error: `Missing required fields: ${missingFields.join(', ')}` });
     }
 
     const result = await createEstablishmentService(
-      estName, type, cityMun, barangay, latitude, longitude,
+      est_name, type, city_mun, barangay, latitude, longitude,
       english, korean, chinese, japanese, russian, french, spanish, hindi
     );
 
@@ -306,9 +327,9 @@ export const fetchEstablishments = async (req, res, next) => {
   logger.info("GET /api/admin/establishments");
   try {
     const filters = {
-      estName: req.query.estName,
+      est_name: req.query.est_name,
       type: req.query.type,
-      cityMun: req.query.cityMun,
+      city_mun: req.query.city_mun,
       barangay: req.query.barangay
     };
 
@@ -320,19 +341,20 @@ export const fetchEstablishments = async (req, res, next) => {
 };
 export const updateEstablishment = async (req, res, next) => {
   logger.info("PUT /api/admin/establishments");
+  logger.warn(`REQ BODY : ${JSON.stringify(req.body)}`);
   try {
     const {
-      id, estName, type, cityMun, barangay, latitude, longitude,
+      id, est_name, type, city_mun, barangay, latitude, longitude,
       english, korean, chinese, japanese, russian, french, spanish, hindi
     } = req.body;
 
     // Validate required fields
-    if (!id || !estName || !type || !cityMun || !barangay || !latitude || !longitude) {
+    if (!id || !est_name || !type || !city_mun || !barangay || !latitude || !longitude) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
     const result = await updateEstablishmentService(
-      id, estName, type, cityMun, barangay, latitude, longitude,
+      id, est_name, type, city_mun, barangay, latitude, longitude,
       english, korean, chinese, japanese, russian, french, spanish, hindi
     );
 
@@ -359,19 +381,28 @@ export const deleteEstablishment = async (req, res, next) => {
 };
 export const createTourismAttractionController = async (req, res, next) => {
   logger.info("POST /api/admin/tourismattractions");
+  logger.warn(`CREATE TOUATT REQ BODY-> ${JSON.stringify(req.body)}`);
   try {
     const {
-      taName, typeCode, region, provHuc, cityMun, reportYear, brgy,
-      latitude, longitude, taCategory, ntdpCategory, devtLvl, mgt, onlineConnectivity
+      ta_name, type_code, region, prov_huc, city_mun, report_year, brgy,
+      latitude, longitude, ta_category, ntdp_category, devt_lvl, mgt, online_connectivity
     } = req.body;
 
-    if (!taName || !typeCode || !region || !provHuc || !cityMun || !reportYear) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    const missingFields = [];
+    if (!ta_name) missingFields.push('ta_name');
+    if (!type_code) missingFields.push('type_code');
+    if (!region) missingFields.push('region');
+    if (!prov_huc) missingFields.push('prov_huc');
+    if (!city_mun) missingFields.push('city_mun');
+    if (!report_year) missingFields.push('report_year');
+
+    if (missingFields.length > 0) {
+      return res.status(400).json({ error: `Missing required fields: ${missingFields.join(', ')}` });
     }
 
     const result = await createTourismAttractionService(
-      taName, typeCode, region, provHuc, cityMun, reportYear, brgy,
-      latitude, longitude, taCategory, ntdpCategory, devtLvl, mgt, onlineConnectivity
+      ta_name, type_code, region, prov_huc, city_mun, report_year, brgy,
+      latitude, longitude, ta_category, ntdp_category, devt_lvl, mgt, online_connectivity
     );
 
     res.status(201).json(result);
@@ -383,12 +414,12 @@ export const fetchTourismAttractionController = async (req, res, next) => {
   logger.info("GET /api/admin/tourismattractions");
   try {
     const filters = {
-      taName: req.query.taName,
-      typeCode: req.query.typeCode, 
+      ta_name: req.query.ta_name,
+      type_code: req.query.type_code, 
       region: req.query.region,
-      cityMun: req.query.cityMun,
-      reportYear: req.query.reportYear,
-      taCategory: req.query.taCategory
+      city_mun: req.query.city_mun,
+      report_year: req.query.report_year,
+      ta_category: req.query.ta_category
     };
 
     const attractions = await fetchTourismAttractionsService(filters);
@@ -401,17 +432,17 @@ export const updateTourismAttractionController = async (req, res, next) => {
   logger.info("PUT /api/admin/tourismattractions");
   try {
     const {
-      id, taName, typeCode, region, provHuc, cityMun, reportYear, brgy,
-      latitude, longitude, taCategory, ntdpCategory, devtLvl, mgt, onlineConnectivity
+      id, ta_name, type_code, region, prov_huc, city_mun, report_year, brgy,
+      latitude, longitude, ta_category, ntdp_category, devt_lvl, mgt, online_connectivity
     } = req.body;
 
-    if (!id || !taName || !typeCode || !region || !provHuc || !cityMun || !reportYear) {
+    if (!id || !ta_name || !type_code || !region || !prov_huc || !city_mun || !report_year) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
     const result = await updateTourismAttractionService(
-      id, taName, typeCode, region, provHuc, cityMun, reportYear, brgy,
-      latitude, longitude, taCategory, ntdpCategory, devtLvl, mgt, onlineConnectivity
+      id, ta_name, type_code, region, prov_huc, city_mun, report_year, brgy,
+      latitude, longitude, ta_category, ntdp_category, devt_lvl, mgt, online_connectivity
     );
 
     res.json({ message: `Tourism attraction ${id} updated successfully`, attraction: result });

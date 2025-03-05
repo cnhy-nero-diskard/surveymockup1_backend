@@ -19,7 +19,7 @@ export const createLocalizationService = async (key, language_code, textContent,
     // Return the newly created row
     return result.rows[0];
   } catch (err) {
-    logger.error(err.message);
+    logger.error({error: err.message});
     throw err;
   }
 };
@@ -55,7 +55,7 @@ export const fetchLocalizationsService = async (filters = {}) => {
     // Return all matching rows
     return result.rows;
   } catch (err) {
-    logger.error(err.message);
+    logger.error({error: err.message});
     throw err;
   }
 };
@@ -76,7 +76,7 @@ export const updateLocalizationService = async (id, key, languageCode, textConte
     // Return the updated row
     return result.rows[0];
   } catch (err) {
-    logger.error(err.message);
+    logger.error({error: err.message});
     throw err;
   }
 };
@@ -96,7 +96,7 @@ export const deleteLocalizationService = async (id) => {
     // Return the deleted row
     return result.rows[0];
   } catch (err) {
-    logger.error(err.message);
+    logger.error({error: err.message});
     throw err;
   }
 };
@@ -125,7 +125,7 @@ export const createEstablishmentService = async (
     // Return the newly created row
     return result.rows[0];
   } catch (err) {
-    logger.error(err.message);
+    logger.error({error: err.message});
     throw err;
   }
 };
@@ -165,7 +165,7 @@ export const fetchEstablishmentsService = async (filters = {}) => {
     // Return all matching rows
     return result.rows;
   } catch (err) {
-    logger.error(err.message);
+    logger.error({error: err.message});
     throw err;
   }
 };
@@ -194,7 +194,7 @@ export const updateEstablishmentService = async (
     // Return the updated row
     return result.rows[0];
   } catch (err) {
-    logger.error(err.message);
+    logger.error({error: err.message});
     throw err;
   }
 };
@@ -214,7 +214,7 @@ export const deleteEstablishmentService = async (id) => {
     // Return the deleted row
     return result.rows[0];
   } catch (err) {
-    logger.error(err.message);
+    logger.error({error: err.message});
     throw err;
   }
 };
@@ -243,7 +243,7 @@ export const createTourismAttractionService = async (
     // Return the newly created row
     return result.rows[0];
   } catch (err) {
-    logger.error(err.message);
+    logger.error({error: err.message});
     throw err;
   }
 };
@@ -291,7 +291,7 @@ export const fetchTourismAttractionsService = async (filters = {}) => {
     // Return all matching rows
     return result.rows;
   } catch (err) {
-    logger.error(err.message);
+    logger.error({error: err.message});
     throw err;
   }
 };
@@ -320,7 +320,7 @@ export const updateTourismAttractionService = async (
     // Return the updated row
     return result.rows[0];
   } catch (err) {
-    logger.error(err.message);
+    logger.error({error: err.message});
     throw err;
   }
 };
@@ -340,7 +340,7 @@ export const deleteTourismAttractionService = async (id) => {
     // Return the deleted row
     return result.rows[0];
   } catch (err) {
-    logger.error(err.message);
+    logger.error({error: err.message});
     throw err;
   }
 };
@@ -360,7 +360,7 @@ export const createSurveyResponseService = async (anonymous_user_id, surveyquest
     // Return the newly created row
     return result.rows[0];
   } catch (err) {
-    logger.error(err.message);
+    logger.error({error: err.message});
     throw err;
   }
 };
@@ -383,7 +383,7 @@ export const fetchSurveyResponsesService = async (anonid = null) => {
     logger.warn(result.rowCount)
     return result.rows;
   } catch (err) {
-    logger.error(err.message);
+    logger.error({error: err.message});
     throw err;
   }
 };
@@ -404,7 +404,7 @@ export const updateSurveyResponseService = async (response_id, response_value) =
     // Return the updated survey response row
     return result.rows[0];
   } catch (err) {
-    logger.error(err.message);
+    logger.error({error: err.message});
     throw err;
   }
 };
@@ -424,7 +424,7 @@ export const deleteSurveyResponseService = async (anonymous_user_id) => {
     // Return all deleted survey response rows
     return result.rows;
   } catch (err) {
-    logger.error(err.message);
+    logger.error({error: err.message});
     throw err;
   }
 };
@@ -442,7 +442,121 @@ export const fetchResponsesByUserAndQuestion = async (anonymous_user_id, surveyq
     // Return all matching survey response rows
     return result.rows;
   } catch (err) {
-    logger.error(err.message);
+    logger.error({error: err.message});
     throw err;
   }
 };
+
+export const deleteSurveyResponseServiceByUserId = async (anonymous_user_id) => {
+  logger.database("METHOD api/admin/deleteSurveyResponse");
+  try {
+    const query = `
+      DELETE FROM public.survey_responses
+      WHERE anonymous_user_id = $1 AND $1 IS NOT NULL
+      RETURNING *;
+    `;
+    const values = [anonymous_user_id];
+    const result = await pool.query(query, values);
+    return result.rows;
+  } catch (err) {
+    logger.error({ error: err.message });
+    throw err;
+  }
+};
+
+// DISABLED -- SESSION MANAGER WILL BE THE ONLY SERVICE THAT CAN ADD STUFF IN THIS TABLE
+// // Function to create a new anonymous user entry in the database
+// export const createAnonymousUserService = async (anonymous_user_id, nickname) => {
+//   logger.database("METHOD api/admin/anonymous_users - CREATE");
+//   try {
+//     // SQL query to insert a new anonymous user record
+//     const query = `
+//       INSERT INTO public.anonymous_users (anonymous_user_id, nickname)
+//       VALUES ($1, $2)
+//       RETURNING *;
+//     `;
+//     const values = [anonymous_user_id, nickname];
+//     const result = await pool.query(query, values);
+//     // Return the newly created row
+//     return result.rows[0];
+//   } catch (err) {
+//     logger.error({ error: err.message });
+//     throw err;
+//   }
+// };
+// // Function to update an anonymous user entry
+// export const updateAnonymousUserService = async (anonymous_user_id, nickname, is_active, current_step, has_completed) => {
+//   logger.database("METHOD api/admin/anonymous_users - UPDATE");
+//   try {
+//     // SQL query to update an anonymous user record by id
+//     const query = `
+//       UPDATE public.anonymous_users
+//       SET nickname = $1, is_active = $2, current_step = $3, has_completed = $4
+//       WHERE anonymous_user_id = $5
+//       RETURNING *;
+//     `;
+//     const values = [nickname, is_active, current_step, has_completed, anonymous_user_id];
+//     const result = await pool.query(query, values);
+//     // Return the updated row
+//     return result.rows[0];
+//   } catch (err) {
+//     logger.error({ error: err.message });
+//     throw err;
+//   }
+// };
+
+
+
+// Function to fetch anonymous users based on optional filters
+export const fetchAnonymousUsersService = async (filters = {}) => {
+  logger.database("METHOD api/admin/anonymous_users - READ");
+  try {
+    let query = `SELECT * FROM public.anonymous_users`;
+    const values = [];
+    const conditions = [];
+
+    // Add filters to the query if provided
+    if (filters.anonymous_user_id) {
+      conditions.push(`anonymous_user_id = $${values.length + 1}`);
+      values.push(filters.anonymous_user_id);
+    }
+    if (filters.nickname) {
+      conditions.push(`nickname ILIKE $${values.length + 1}`);
+      values.push(`%${filters.nickname}%`);
+    }
+
+    // Append conditions to the query if any exist
+    if (conditions.length > 0) {
+      query += ` WHERE ${conditions.join(' AND ')}`;
+    }
+
+    const result = await pool.query(query, values);
+    // Return all matching rows
+    return result.rows;
+  } catch (err) {
+    logger.error({ error: err.message });
+    throw err;
+  }
+};
+
+
+// Function to delete an anonymous user entry by id
+export const deleteAnonymousUserService = async (anonymous_user_id) => {
+  logger.database("METHOD api/admin/anonymous_users - DELETE");
+  try {
+    // SQL query to delete an anonymous user record by id
+    const query = `
+      DELETE FROM public.anonymous_users
+      WHERE anonymous_user_id = $1
+      RETURNING *;
+    `;
+    const values = [anonymous_user_id];
+    const result = await pool.query(query, values);
+    // Return the deleted row
+    return result.rows[0];
+  } catch (err) {
+    logger.error({ error: err.message });
+    throw err;
+  }
+};
+

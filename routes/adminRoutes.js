@@ -46,6 +46,7 @@ router.post ('/api/admin/survey-responses', createSurveyResponseController);
 router.get ('/api/admin/survey-responses', fetchSurveyResponsesController);
 router.put ('/api/admin/survey-responses', updateSurveyResponseController);
 router.delete ('/api/admin/survey-responses', deleteSurveyResponseController);
+router.delete ('/api/admin/deletesurveyuser', deleteSurveyResponseController);
 
 
 router.get('/api/admin/anonymous-users', fetchAnonymousUsersController);
