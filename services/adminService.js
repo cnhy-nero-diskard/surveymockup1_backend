@@ -130,3 +130,11 @@ export const fetchOpenEndedSurveyResponses = async () => {
 //     throw err;
 //   }
 // };
+export const fetchSurveyQuestionsService = async () => {
+  const query = `
+    SELECT id, questiontype, survey_version, content, modified_date, title, surveyresponses_ref, surveytopic
+    FROM survey_questions;
+  `;
+  const result = await pool.query(query);
+  return result.rows;
+};

@@ -249,16 +249,17 @@ export const appendNewFeedback = async (req, res, next) => {
     res.status(500).send("Server error");
   }
 };
-
 export const getUserFeedback = async (req, res, next) => {
-  const { anonymousUserId } = req.params; // Assuming user ID is in the route parameter
+  logger.database('GET /api/survey/feedback');
+  const { anonid } = req.query; 
+  logger.warn(`GET TPENT from user ${anonid}`);
 
   try {
     const query = `
       SELECT response_expandable FROM survey_responses 
       WHERE anonymous_user_id = $1;
     `;
-    const values = [anonymousUserId];
+    const values = [anonid];
 
     const result = await pool.query(query, values);
 
@@ -266,11 +267,17 @@ export const getUserFeedback = async (req, res, next) => {
       return res.status(404).json({ error: "Survey response not found" });
     }
 
-    // PostgreSQL returns jsonb[] as a string-like array, so we need to parse it
-    const jsonbArray = result.rows[0].response_expandable; // This is a JS array of JSON strings
-    const parsedArray = jsonbArray.map(item => JSON.parse(item)); // Convert each JSON string to an object
+    logger.warn(`RESULTS => ${JSON.stringify(result.rows)}`);
 
-    res.status(200).json(parsedArray); // Send as a proper array
+    // Extract all non-null response_expandable arrays
+    const feedbackArrays = result.rows
+      .map(row => row.response_expandable)  // Get all response_expandable values
+      .filter(expandable => expandable !== null); // Remove nulls
+
+    // Flatten into a single array (if there are multiple rows)
+    const mergedFeedback = [].concat(...feedbackArrays);
+
+    res.status(200).json(mergedFeedback);
   } catch (error) {
     console.error("Error fetching feedback:", error.message);
     res.status(500).json({ error: "Server error" });

@@ -1,5 +1,5 @@
 // controllers/adminController.js
-import { getAdminDataFromDB, updateTourismAttraction, addTourismAttraction, fetchTourismAttraction, deleteTourismAttraction, fetchAnonymousUsers, getEstablishmentEnglishNames, fetchOpenEndedSurveyResponses } from '../services/adminService.js';
+import { getAdminDataFromDB, updateTourismAttraction, addTourismAttraction, fetchTourismAttraction, deleteTourismAttraction, fetchAnonymousUsers, getEstablishmentEnglishNames, fetchOpenEndedSurveyResponses, fetchSurveyQuestionsService } from '../services/adminService.js';
 import logger from '../middleware/logger.js';
 import { validationResult } from 'express-validator';
 import pool from '../config/db.js';
@@ -525,5 +525,15 @@ export const deleteSurveyResponseController = async (req, res, next) => {
     res.json({ message: `Survey response ${anonymous_user_id} deleted successfully`, response: result });
   } catch (err) {
     next(`ERROR ON DELETING SURVEY RESPONSE: ${err}`);
+  }
+};
+
+export const fetchSurveyQuestionsController = async (req, res, next) => {
+  logger.info("GET /api/admin/survey-questions");
+  try {
+    const questions = await fetchSurveyQuestionsService();
+    res.json(questions);
+  } catch (err) {
+    next(`ERROR ON FETCHING SURVEY QUESTIONS: ${err}`);
   }
 };
