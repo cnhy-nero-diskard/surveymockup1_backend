@@ -73,6 +73,14 @@ export const fetchAnonymousUsers = async () => {
   const result = await pool.query(query);
   return result.rows;
 };
+
+export const purgeAnonymousUsers = async () => {
+  const query = 'DELETE FROM anonymous_users';
+  await pool.query(query);
+  return "anonymous_users successfully purged"
+};
+
+
 export const getEstablishmentEnglishNames = async () => {
   const query = 'SELECT id, est_name FROM establishments WHERE TRUE';
   const result = await pool.query(query);

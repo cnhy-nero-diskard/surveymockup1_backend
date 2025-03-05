@@ -5,7 +5,7 @@ import { authenticate, authorizeAdmin } from '../middleware/authMiddleware.js';
 import { submitSurveyResponseController } from '../controllers/surveyController.js';
 import { validateSurveyResponse } from '../middleware/validationMiddleware.js';
 import { validateTourismAttraction } from '../middleware/validationMiddleware.js';
-import { addTourismAttraction, getEstablishmentEnglishNames } from '../services/adminService.js';
+import { addTourismAttraction, getEstablishmentEnglishNames, purgeAnonymousUsers } from '../services/adminService.js';
 import { getMetrics } from '../metrics/metricsController.js';
 
 const router = express.Router();
@@ -50,6 +50,7 @@ router.delete ('/api/admin/deletesurveyuser', deleteSurveyResponseController);
 
 
 router.get('/api/admin/anonymous-users', fetchAnonymousUsersController);
+router.delete('/api/admin/all-anonymous-users', purgeAnonymousUsers);
 // router.get('api/log-stream', logstream)
 
 
