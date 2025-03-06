@@ -191,3 +191,25 @@ export const groupResponsesByQuestionTitleService = async () => {
         throw err;
     }
 };
+
+// Function to count establishments by type
+export const countEstablishmentsByTypeService = async () => {
+    logger.database("METHOD api/admin/countEstablishmentsByType");
+    try {
+        const query = `
+            SELECT type, COUNT(*) as count
+            FROM public.establishments
+            GROUP BY type
+            ORDER BY type;
+        `;
+        const result = await pool.query(query);
+        const typeCounts = result.rows.reduce((acc, row) => {
+            acc[row.type] = parseInt(row.count, 10);
+            return acc;
+        }, {});
+        return typeCounts;
+    } catch (err) {
+        logger.error({ error: err.message });
+        throw err;
+    }
+};

@@ -703,4 +703,133 @@ export const insertTopicDataService = async (data) => {
     throw err;
   }
 };
+// Function to fetch locations based on optional filters
+export const fetchLocationsService = async (filters = {}) => {
+  logger.database("METHOD api/admin/locations - READ");
+  try {
+    const query = `SELECT * FROM public.locations`;
+    const result = await pool.query(query);
+    return result.rows;
+  } catch (err) {
+    logger.error({error: err.message});
+    throw err;
+  }
+};
 
+// -------------------------- TOUCHPOINT ACQUISITION  --------------------------
+
+export const fetchLocationsServiceFiltered = async (filters = {}) => {
+  logger.database("METHOD api/admin/locations - READ");
+  try {
+    const query = `
+      SELECT location_type, name, short_id FROM public.locations 
+      WHERE location_type IN ('barangay', 'muncity', 'transportation')
+    `;
+    const result = await pool.query(query);
+    
+    // Group results by location_type
+    const groupedLocations = result.rows.reduce((acc, row) => {
+      const { location_type, ...locationData } = row;
+      if (!acc[location_type]) {
+        acc[location_type] = [];
+      }
+      acc[location_type].push(locationData);
+      return acc;
+    }, {});
+
+    return groupedLocations;
+  } catch (err) {
+    logger.error({error: err.message});
+    throw err;
+  }
+};
+
+// Function to fetch all tourism attractions
+export const fetchAllTourismAttractionsService = async () => {
+  logger.database("METHOD api/admin/tourismattractions - READ ALL");
+  try {
+    const query = 'SELECT ta_name as name, short_id FROM public.tourismattractions';
+    const result = await pool.query(query);
+    return {Attractions: result.rows};
+  } catch (err) {
+    logger.error({error: err.message});
+    throw err;
+  }
+};
+
+// Function to fetch all establishments
+export const fetchAllEstablishmentsService = async () => {
+  logger.database("METHOD api/admin/establishments - READ ALL");
+  try {
+    const query = 'SELECT est_name as name, short_id FROM public.establishments ORDER BY name ASC';
+    const result = await pool.query(query);
+    return {Establishments: result.rows};
+  } catch (err) {
+    logger.error({error: err.message}); 
+    throw err;
+  }
+};
+
+// Helper function to fetch all location data at once
+export const fetchAllTouchpointsService = async () => {
+  logger.database("METHOD api/admin/locations - FETCH ALL DATA");
+  try {
+    const [locations, attractions, establishments] = await Promise.all([
+      fetchLocationsServiceFiltered(),
+      fetchAllTourismAttractionsService(),
+      fetchAllEstablishmentsService()
+    ]);
+
+    // Rename the 'Attractions' and 'Establishments' keys to lowercase
+    const { Attractions: attractionsData } = attractions;
+    const { Establishments: establishmentsData } = establishments;
+
+    return {
+      ...locations,
+      attractions: attractionsData,
+      establishments: establishmentsData
+    };
+  } catch (err) {
+    logger.error({error: err.message});
+    throw err;
+  }
+};
+
+// // Function to fetch duplicate establishment names
+// export const fetchDuplicateEstablishmentsService = async () => {
+//   logger.database("METHOD api/admin/establishments - FETCH DUPLICATES");
+//   try {
+//     const query = `
+//       SELECT est_name, COUNT(*) as count
+//       FROM public.establishments 
+//       GROUP BY est_name
+//       HAVING COUNT(*) > 1
+//       ORDER BY count DESC;
+//     `;
+//     const result = await pool.query(query);
+//     return result.rows;
+//   } catch (err) {
+//     logger.error({error: err.message});
+//     throw err;
+//   }
+// };
+
+// // Function to fetch and delete duplicate establishment entries
+// export const fetchDuplicateEstablishmentsService = async () => {
+//   logger.database("METHOD api/admin/establishments - FETCH AND DELETE DUPLICATES");
+//   try {
+//     // First identify duplicates and keep only the first occurrence (lowest ID)
+//     const query = `
+//       DELETE FROM public.establishments e1 
+//       USING public.establishments e2
+//       WHERE e1.est_name = e2.est_name 
+//       AND e1.id > e2.id
+//       RETURNING e1.*;
+//     `;
+//     const result = await pool.query(query);
+//     return result.rows; // Returns the deleted duplicate rows
+//   } catch (err) {
+//     logger.error({error: err.message});
+//     throw err;
+//   }
+// };

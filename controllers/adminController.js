@@ -8,7 +8,7 @@ import { queryHuggingFace } from '../services/huggingFaceService.js';
 import { logEmitter } from '../middleware/logger.js';
 import dotenv from 'dotenv';
 import { response } from 'express';
-import { createEstablishmentService, createLocalizationService, createSentimentAnalysisService, createTourismAttractionService, deleteEstablishmentService, deleteLocalizationService, deleteSentimentAnalysisService, deleteSurveyResponseService, deleteTourismAttractionService, fetchEstablishmentsService, fetchLocalizationsService, fetchSentimentAnalysisService, fetchSurveyResponsesService, fetchTourismAttractionsService, insertTopicDataService, updateEstablishmentService, updateLocalizationService, updateSentimentAnalysisService, updateSurveyResponseService, updateTourismAttractionService } from '../services/adminCRUD.js';
+import { createEstablishmentService, createLocalizationService, createSentimentAnalysisService, createTourismAttractionService, deleteEstablishmentService, deleteLocalizationService, deleteSentimentAnalysisService, deleteSurveyResponseService, deleteTourismAttractionService, fetchAllTouchpointsService, fetchEstablishmentsService, fetchLocalizationsService, fetchSentimentAnalysisService, fetchSurveyResponsesService, fetchTourismAttractionsService, insertTopicDataService, updateEstablishmentService, updateLocalizationService, updateSentimentAnalysisService, updateSurveyResponseService, updateTourismAttractionService } from '../services/adminCRUD.js';
 dotenv.config();
 
 export const getAdminData = async (req, res, next) => {
@@ -638,5 +638,15 @@ export const insertTopicDataController = async (req, res, next) => {
     res.status(201).json(result);
   } catch (err) {
     res.status(400).json({ error: `ERROR ON INSERTING TOPIC DATA: ${err.message}` });
+  }
+};
+
+export const fetchAllTouchpointsController = async (req, res, next) => {
+  logger.info("GET /api/admin/touchpoints");
+  try {
+    const result = await fetchAllTouchpointsService();
+    res.json(result);
+  } catch (err) {
+    next(`ERROR ON FETCHING ALL TOUCHPOINTS: ${err}`);
   }
 };
