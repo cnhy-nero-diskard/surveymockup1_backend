@@ -34,8 +34,8 @@ export const login = async (req, res, next) => {
         res.cookie('token', token, {
             httpOnly: true, // Prevent JavaScript access
             secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in production
-            sameSite: 'strict', // Prevent CSRF attacks
-            maxAge: 3600000, // 1 hour expiration
+            // Prevent CSRF attacks
+            maxAge: 18000000, // 5 hours expiration
             path: '/', // Ensure the cookie is sent for all routes
         }).status(200).send('Logged in successfully');
         logger.info('Response Headers:', res.getHeaders());

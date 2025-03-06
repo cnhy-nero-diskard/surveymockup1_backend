@@ -660,49 +660,46 @@ export const deleteSentimentAnalysisService = async (id) => {
 // Function to insert data into topics, top_words, and contributions tables
 export const insertTopicDataService = async (data) => {
   logger.database("METHOD api/admin/insertTopicData");
-  const client = await pool.connect();
   try {
-    await client.query('BEGIN');
 
-    for (const item of data) {
-      const { topic, probability, top_words, customLabel, contribution } = item;
-
+    for (const item of [data]) {
+      const { topic, probability, top_words, customLabel, contribution, startDate, endDate } = item;
+      // Convert startDate and endDate to proper timestamp format
+      const formattedStartDate = new Date(startDate).toISOString();
+      const formattedEndDate = new Date(endDate).toISOString();
       // Insert into topics table
       const topicQuery = `
-        INSERT INTO topics (topic_id, probability, custom_label)
-        VALUES ($1, $2, $3)
+        INSERT INTO tm_topics (topic_id, probability, custom_label, startdate, enddate)
+        VALUES ($1, $2, $3, $4, $5)
         RETURNING id;
       `;
-      const topicValues = [topic, probability, customLabel];
-      const topicResult = await client.query(topicQuery, topicValues);
+      const topicValues = [topic, probability, customLabel, formattedStartDate, formattedEndDate];
+      const topicResult = await pool.query(topicQuery, topicValues);
       const topicId = topicResult.rows[0].id;
+      logger.database(`topic id --> ${topicId}`);
 
       // Insert into top_words table
       const topWordsQuery = `
-        INSERT INTO top_words (topic_id, word)
+        INSERT INTO tm_top_words (topic_id, word)
         VALUES ${top_words.map((_, index) => `($1, $${index + 2})`).join(', ')};
       `;
       const topWordsValues = [topicId, ...top_words];
-      await client.query(topWordsQuery, topWordsValues);
+      await pool.query(topWordsQuery, topWordsValues);
 
       // Insert into contributions table
       for (const contrib of contribution) {
         const [relatedTopic, relatedLabel, contributionPercentage] = contrib;
         const contribQuery = `
-          INSERT INTO contributions (topic_id, related_topic, related_label, contribution_percentage)
+          INSERT INTO tm_contributions (topic_id, related_topic, related_label, contribution_percentage)
           VALUES ($1, $2, $3, $4);
         `;
         const contribValues = [topicId, relatedTopic, relatedLabel, parseFloat(contributionPercentage)];
-        await client.query(contribQuery, contribValues);
+        await pool.query(contribQuery, contribValues);
       }
     }
 
-    await client.query('COMMIT');
   } catch (err) {
-    await client.query('ROLLBACK');
     logger.error({ error: err.message });
     throw err;
-  } finally {
-    client.release();
   }
 };
