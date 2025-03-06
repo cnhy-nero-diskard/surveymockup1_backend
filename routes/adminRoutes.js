@@ -1,6 +1,6 @@
 // routes/adminRoutes.js
 import express from 'express';
-import { getAdminData, getAdminSessionData, updateTourismAttractionController, addTourismAttractionController, deleteTourismAttractionController, posthftokens, gethftokens, analyzeSentiment, analyzeTopics, fetchAnonymousUsersController, logstream, getEstablishmentEnglishNamesController, getOpenEndedSurveyResponses, createLocalization, fetchLocalization, updateLocalization, deleteLocalization, createEstablishment, fetchEstablishments, updateEstablishment, deleteEstablishment, createTourismAttractionController, fetchTourismAttractionController, createSurveyResponseController, fetchSurveyResponsesController, updateSurveyResponseController, deleteSurveyResponseController, fetchSurveyQuestionsController } from '../controllers/adminController.js';
+import { getAdminData, getAdminSessionData, updateTourismAttractionController, addTourismAttractionController, deleteTourismAttractionController, posthftokens, gethftokens, analyzeSentiment, analyzeTopics, fetchAnonymousUsersController, logstream, getEstablishmentEnglishNamesController, getOpenEndedSurveyResponses, createLocalization, fetchLocalization, updateLocalization, deleteLocalization, createEstablishment, fetchEstablishments, updateEstablishment, deleteEstablishment, createTourismAttractionController, fetchTourismAttractionController, createSurveyResponseController, fetchSurveyResponsesController, updateSurveyResponseController, deleteSurveyResponseController, fetchSurveyQuestionsController, createSentimentAnalysisController, updateSentimentAnalysisController, fetchSentimentAnalysisController, deleteSentimentAnalysisController } from '../controllers/adminController.js';
 import { authenticate, authorizeAdmin } from '../middleware/authMiddleware.js';
 import { submitSurveyResponseController } from '../controllers/surveyController.js';
 import { validateSurveyResponse } from '../middleware/validationMiddleware.js';
@@ -26,6 +26,7 @@ router.post('/api/hf-tokens', posthftokens);
 router.get('/api/hf-tokens', authenticate, gethftokens);
 router.post('/api/analyzesentiment', analyzeSentiment);
 router.post('/api/analyzetopics', analyzeTopics);
+router.post('/api/storetopics', analyzeTopics);
 
 router.post('/api/admin/localization', createLocalization);
 router.get('/api/admin/localization',  fetchLocalization);
@@ -47,6 +48,12 @@ router.get ('/api/admin/survey-responses', fetchSurveyResponsesController);
 router.put ('/api/admin/survey-responses', updateSurveyResponseController);
 router.delete ('/api/admin/survey-responses', deleteSurveyResponseController);
 router.delete ('/api/admin/deletesurveyuser', deleteSurveyResponseController);
+
+
+router.post('/api/admin/sentiment_results', createSentimentAnalysisController);
+router.get('/api/admin/sentiment_results', fetchSentimentAnalysisController);
+router.put('/api/admin/sentiment_results', updateSentimentAnalysisController);
+router.delete('/api/admin/sentiment_results', deleteSentimentAnalysisController);
 
 router.get('/api/admin/survey-questions', fetchSurveyQuestionsController);
 

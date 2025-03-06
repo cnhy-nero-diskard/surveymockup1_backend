@@ -560,3 +560,149 @@ export const deleteAnonymousUserService = async (anonymous_user_id) => {
   }
 };
 
+// Function to create a new sentiment analysis entry in the database
+export const createSentimentAnalysisService = async (sentimentDataArray) => {
+  logger.database("METHOD api/admin/sentiment_analysis - CREATE BULK");
+  try {
+    // SQL query to insert multiple sentiment analysis records
+    const query = `
+      INSERT INTO public.sentiment_analysis (user_id, review_date, rating, sqref, sentiment, confidence)
+      VALUES ${sentimentDataArray.map((_, index) => `($${index * 6 + 1}, $${index * 6 + 2}, $${index * 6 + 3}, $${index * 6 + 4}, $${index * 6 + 5}, $${index * 6 + 6})`).join(', ')}
+      RETURNING *;
+    `;
+    const values = sentimentDataArray.flat();
+    const result = await pool.query(query, values);
+    // Return the newly created rows
+    return result.rows;
+  } catch (err) {
+    logger.error({ error: err.message });
+    throw err;
+  }
+};
+
+// Function to fetch sentiment analysis entries based on optional filters
+export const fetchSentimentAnalysisService = async (filters = {}) => {
+  logger.database("METHOD api/admin/sentiment_analysis - READ");
+  try {
+    let query = `SELECT * FROM public.sentiment_analysis`;
+    const values = [];
+    const conditions = [];
+
+    // Add filters to the query if provided
+    if (filters.user_id) {
+      conditions.push(`user_id = $${values.length + 1}`);
+      values.push(filters.user_id);
+    }
+    if (filters.sqref) {
+      conditions.push(`sqref = $${values.length + 1}`);
+      values.push(filters.sqref);
+    }
+    if (filters.sentiment) {
+      conditions.push(`sentiment = $${values.length + 1}`);
+      values.push(filters.sentiment);
+    }
+
+    // Append conditions to the query if any exist
+    if (conditions.length > 0) {
+      query += ` WHERE ${conditions.join(' AND ')}`;
+    }
+
+    const result = await pool.query(query, values);
+    // Return all matching rows
+    return result.rows;
+  } catch (err) {
+    logger.error({ error: err.message });
+    throw err;
+  }
+};
+
+// Function to update a sentiment analysis entry
+export const updateSentimentAnalysisService = async (id, user_id, review_date, rating, sqref, sentiment, confidence) => {
+  logger.database("METHOD api/admin/sentiment_analysis - UPDATE");
+  try {
+    // SQL query to update a sentiment analysis record by id
+    const query = `
+      UPDATE public.sentiment_analysis
+      SET user_id = $1, review_date = $2, rating = $3, sqref = $4, sentiment = $5, confidence = $6
+      WHERE id = $7
+      RETURNING *;
+    `;
+    const values = [user_id, review_date, rating, sqref, sentiment, confidence, id];
+    const result = await pool.query(query, values);
+    // Return the updated row
+    return result.rows[0];
+  } catch (err) {
+    logger.error({ error: err.message });
+    throw err;
+  }
+};
+
+// Function to delete a sentiment analysis entry by id
+export const deleteSentimentAnalysisService = async (id) => {
+  logger.database("METHOD api/admin/sentiment_analysis - DELETE");
+  try {
+    // SQL query to delete a sentiment analysis record by id
+    const query = `
+      DELETE FROM public.sentiment_analysis
+      WHERE id = $1
+      RETURNING *;
+    `;
+    const values = [id];
+    const result = await pool.query(query, values);
+    // Return the deleted row
+    return result.rows[0];
+  } catch (err) {
+    logger.error({ error: err.message });
+    throw err;
+  }
+};
+
+// Function to insert data into topics, top_words, and contributions tables
+export const insertTopicDataService = async (data) => {
+  logger.database("METHOD api/admin/insertTopicData");
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    for (const item of data) {
+      const { topic, probability, top_words, customLabel, contribution } = item;
+
+      // Insert into topics table
+      const topicQuery = `
+        INSERT INTO topics (topic_id, probability, custom_label)
+        VALUES ($1, $2, $3)
+        RETURNING id;
+      `;
+      const topicValues = [topic, probability, customLabel];
+      const topicResult = await client.query(topicQuery, topicValues);
+      const topicId = topicResult.rows[0].id;
+
+      // Insert into top_words table
+      const topWordsQuery = `
+        INSERT INTO top_words (topic_id, word)
+        VALUES ${top_words.map((_, index) => `($1, $${index + 2})`).join(', ')};
+      `;
+      const topWordsValues = [topicId, ...top_words];
+      await client.query(topWordsQuery, topWordsValues);
+
+      // Insert into contributions table
+      for (const contrib of contribution) {
+        const [relatedTopic, relatedLabel, contributionPercentage] = contrib;
+        const contribQuery = `
+          INSERT INTO contributions (topic_id, related_topic, related_label, contribution_percentage)
+          VALUES ($1, $2, $3, $4);
+        `;
+        const contribValues = [topicId, relatedTopic, relatedLabel, parseFloat(contributionPercentage)];
+        await client.query(contribQuery, contribValues);
+      }
+    }
+
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    logger.error({ error: err.message });
+    throw err;
+  } finally {
+    client.release();
+  }
+};

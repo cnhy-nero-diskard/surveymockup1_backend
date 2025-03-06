@@ -8,7 +8,7 @@ import { queryHuggingFace } from '../services/huggingFaceService.js';
 import { logEmitter } from '../middleware/logger.js';
 import dotenv from 'dotenv';
 import { response } from 'express';
-import { createEstablishmentService, createLocalizationService, createTourismAttractionService, deleteEstablishmentService, deleteLocalizationService, deleteSurveyResponseService, deleteTourismAttractionService, fetchEstablishmentsService, fetchLocalizationsService, fetchSurveyResponsesService, fetchTourismAttractionsService, updateEstablishmentService, updateLocalizationService, updateSurveyResponseService, updateTourismAttractionService } from '../services/adminCRUD.js';
+import { createEstablishmentService, createLocalizationService, createSentimentAnalysisService, createTourismAttractionService, deleteEstablishmentService, deleteLocalizationService, deleteSentimentAnalysisService, deleteSurveyResponseService, deleteTourismAttractionService, fetchEstablishmentsService, fetchLocalizationsService, fetchSentimentAnalysisService, fetchSurveyResponsesService, fetchTourismAttractionsService, updateEstablishmentService, updateLocalizationService, updateSentimentAnalysisService, updateSurveyResponseService, updateTourismAttractionService } from '../services/adminCRUD.js';
 dotenv.config();
 
 export const getAdminData = async (req, res, next) => {
@@ -415,7 +415,7 @@ export const fetchTourismAttractionController = async (req, res, next) => {
   try {
     const filters = {
       ta_name: req.query.ta_name,
-      type_code: req.query.type_code, 
+      type_code: req.query.type_code,
       region: req.query.region,
       city_mun: req.query.city_mun,
       report_year: req.query.report_year,
@@ -529,11 +529,86 @@ export const deleteSurveyResponseController = async (req, res, next) => {
 };
 
 export const fetchSurveyQuestionsController = async (req, res, next) => {
-  logger.info("GET /api/admin/survey-questions");
+  logger.database("GET /api/admin/survey-questions");
   try {
     const questions = await fetchSurveyQuestionsService();
     res.json(questions);
   } catch (err) {
     next(`ERROR ON FETCHING SURVEY QUESTIONS: ${err}`);
+  }
+};
+
+export const createSentimentAnalysisController = async (req, res, next) => {
+  logger.database("POST /api/admin/sentiment_analysis");
+  logger.warn(`SENTIMENT RESULTS BODY --> ${JSON.stringify(req.body.results)}`);
+  try {
+    const { results } = req.body;
+
+    if (!Array.isArray(results) || results.length === 0) {
+      return res.status(400).json({ error: 'Results should be a non-empty array of objects' });
+    }
+
+    for (const result of results) {
+      const { user_id, review_date, rating, sqref, sentiment, confidence } = result;
+      if (!user_id || !review_date || !rating || !sqref || !sentiment || !confidence) {
+        return res.status(400).json({ error: `Missing required fields in one of the result objects: ${JSON.stringify(result)}` });
+      }
+    }
+
+    const createdResults = await Promise.all(results.map(result =>
+      createSentimentAnalysisService(result.user_id, result.review_date, result.rating, result.sqref, result.sentiment, result.confidence)
+    ));
+
+    res.status(201).json(createdResults);
+  } catch (err) {
+    next(`ERROR ON CREATING SENTIMENT ANALYSIS: ${err}`);
+  }
+};
+
+export const fetchSentimentAnalysisController = async (req, res, next) => {
+  logger.database("GET /api/admin/sentiment_analysis");
+  try {
+    const filters = {
+      user_id: req.query.user_id,
+      sqref: req.query.sqref,
+      sentiment: req.query.sentiment
+    };
+
+    const result = await fetchSentimentAnalysisService(filters);
+    res.json(result);
+  } catch (err) {
+    next(`ERROR ON FETCHING SENTIMENT ANALYSIS: ${err}`);
+  }
+};
+
+export const updateSentimentAnalysisController = async (req, res, next) => {
+  logger.database("PUT /api/admin/sentiment_analysis");
+  try {
+    const { id, user_id, review_date, rating, sqref, sentiment, confidence } = req.body;
+
+    if (!id || !user_id || !review_date || !rating || !sqref || !sentiment || !confidence) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const result = await updateSentimentAnalysisService(id, user_id, review_date, rating, sqref, sentiment, confidence);
+    res.json({ message: `Sentiment analysis ${id} updated successfully`, analysis: result });
+  } catch (err) {
+    next(`ERROR ON UPDATING SENTIMENT ANALYSIS: ${err}`);
+  }
+};
+
+export const deleteSentimentAnalysisController = async (req, res, next) => {
+  logger.database("DELETE /api/admin/sentiment_analysis");
+  try {
+    const { id } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ error: 'Missing required id' });
+    }
+
+    const result = await deleteSentimentAnalysisService(id);
+    res.json({ message: `Sentiment analysis ${id} deleted successfully`, analysis: result });
+  } catch (err) {
+    next(`ERROR ON DELETING SENTIMENT ANALYSIS: ${err}`);
   }
 };
