@@ -89,7 +89,7 @@ export const getAdminSessionData = async (req, res, next) => {
 
 export const posthftokens = async (req, res) => {
   logger.info("POST /api/hf-tokens");
-  logger.info(req.body);
+  // logger.info(req.body);
   const { apitoken, label } = req.body;
   try {
     const result = await addHFToken(apitoken, label);
@@ -204,7 +204,7 @@ export const getOpenEndedSurveyResponses = async (req, res, next) => {
   logger.info("GET /api/admin/survey-responses/open-ended");
   try {
     const responses = await fetchOpenEndedSurveyResponses();
-    logger.info(JSON.stringify(responses));
+    // logger.info(JSON.stringify(responses));
     res.json(responses);
   } catch (err) {
     next(`ERROR ON SENDING A RESPONSE: ${err}`); // Pass error to error handler
@@ -292,7 +292,7 @@ export const deleteLocalization = async (req, res, next) => {
 
 export const createEstablishment = async (req, res, next) => {
   logger.info("POST /api/admin/establishment");
-  logger.warn(`REQUEST BODY: ${JSON.stringify(req.body)}`);
+  // logger.warn(`REQUEST BODY: ${JSON.stringify(req.body)}`);
   try {
     const {
       est_name, type, city_mun, barangay, latitude, longitude,
@@ -341,7 +341,7 @@ export const fetchEstablishments = async (req, res, next) => {
 };
 export const updateEstablishment = async (req, res, next) => {
   logger.info("PUT /api/admin/establishments");
-  logger.warn(`REQ BODY : ${JSON.stringify(req.body)}`);
+  // logger.warn(`REQ BODY : ${JSON.stringify(req.body)}`);
   try {
     const {
       id, est_name, type, city_mun, barangay, latitude, longitude,
@@ -381,7 +381,7 @@ export const deleteEstablishment = async (req, res, next) => {
 };
 export const createTourismAttractionController = async (req, res, next) => {
   logger.info("POST /api/admin/tourismattractions");
-  logger.warn(`CREATE TOUATT REQ BODY-> ${JSON.stringify(req.body)}`);
+  // logger.warn(`CREATE TOUATT REQ BODY-> ${JSON.stringify(req.body)}`);
   try {
     const {
       ta_name, type_code, region, prov_huc, city_mun, report_year, brgy,
@@ -610,5 +610,33 @@ export const deleteSentimentAnalysisController = async (req, res, next) => {
     res.json({ message: `Sentiment analysis ${id} deleted successfully`, analysis: result });
   } catch (err) {
     next(`ERROR ON DELETING SENTIMENT ANALYSIS: ${err}`);
+  }
+};
+export const insertTopicDataController = async (req, res, next) => {
+  logger.info("POST /api/admin/insertTopicData");
+  logger.warn(`REQ BODY --> ${JSON.stringify(req.body.zeroidx)}`)
+
+  try {
+    const data = req.body.zeroidx;
+
+    // Validate required fields
+    for (const item of data) {
+      const { topic, probability, top_words, customLabel, contribution } = item;
+      const missingFields = [];
+      if (!topic) missingFields.push('topic');
+      if (!probability) missingFields.push('probability');
+      if (!top_words || !Array.isArray(top_words) || top_words.length === 0) missingFields.push('top_words');
+      if (!customLabel) missingFields.push('customLabel');
+      if (!contribution || !Array.isArray(contribution) || contribution.length === 0) missingFields.push('contribution');
+
+      if (missingFields.length > 0) {
+        return res.status(400).json({ error: `Missing required fields: ${missingFields.join(', ')}` });
+      }
+    }
+
+    const result = await insertTopicDataService(data);
+    res.status(201).json(result);
+  } catch (err) {
+    next(`ERROR ON INSERTING TOPIC DATA: ${err}`);
   }
 };

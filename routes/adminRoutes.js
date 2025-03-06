@@ -1,12 +1,13 @@
 // routes/adminRoutes.js
 import express from 'express';
-import { getAdminData, getAdminSessionData, updateTourismAttractionController, addTourismAttractionController, deleteTourismAttractionController, posthftokens, gethftokens, analyzeSentiment, analyzeTopics, fetchAnonymousUsersController, logstream, getEstablishmentEnglishNamesController, getOpenEndedSurveyResponses, createLocalization, fetchLocalization, updateLocalization, deleteLocalization, createEstablishment, fetchEstablishments, updateEstablishment, deleteEstablishment, createTourismAttractionController, fetchTourismAttractionController, createSurveyResponseController, fetchSurveyResponsesController, updateSurveyResponseController, deleteSurveyResponseController, fetchSurveyQuestionsController, createSentimentAnalysisController, updateSentimentAnalysisController, fetchSentimentAnalysisController, deleteSentimentAnalysisController } from '../controllers/adminController.js';
+import { getAdminData, getAdminSessionData, updateTourismAttractionController, addTourismAttractionController, deleteTourismAttractionController, posthftokens, gethftokens, analyzeSentiment, analyzeTopics, fetchAnonymousUsersController, logstream, getEstablishmentEnglishNamesController, getOpenEndedSurveyResponses, createLocalization, fetchLocalization, updateLocalization, deleteLocalization, createEstablishment, fetchEstablishments, updateEstablishment, deleteEstablishment, createTourismAttractionController, fetchTourismAttractionController, createSurveyResponseController, fetchSurveyResponsesController, updateSurveyResponseController, deleteSurveyResponseController, fetchSurveyQuestionsController, createSentimentAnalysisController, updateSentimentAnalysisController, fetchSentimentAnalysisController, deleteSentimentAnalysisController, insertTopicDataController } from '../controllers/adminController.js';
 import { authenticate, authorizeAdmin } from '../middleware/authMiddleware.js';
 import { submitSurveyResponseController } from '../controllers/surveyController.js';
 import { validateSurveyResponse } from '../middleware/validationMiddleware.js';
 import { validateTourismAttraction } from '../middleware/validationMiddleware.js';
 import { getEstablishmentEnglishNames, purgeAnonymousUsers } from '../services/adminService.js';
 import { getMetrics } from '../metrics/metricsController.js';
+import { insertTopicDataService } from '../services/adminCRUD.js';
 
 const router = express.Router();
 router.get('/api/admin/data', authenticate, getAdminData);
@@ -26,7 +27,7 @@ router.post('/api/hf-tokens', posthftokens);
 router.get('/api/hf-tokens', authenticate, gethftokens);
 router.post('/api/analyzesentiment', analyzeSentiment);
 router.post('/api/analyzetopics', analyzeTopics);
-router.post('/api/storetopics', analyzeTopics);
+router.post('/api/storetopics', insertTopicDataController);
 
 router.post('/api/admin/localization', createLocalization);
 router.get('/api/admin/localization',  fetchLocalization);
