@@ -8,7 +8,7 @@ import { queryHuggingFace } from '../services/huggingFaceService.js';
 import { logEmitter } from '../middleware/logger.js';
 import dotenv from 'dotenv';
 import { response } from 'express';
-import { createEstablishmentService, createLocalizationService, createSentimentAnalysisService, createTourismAttractionService, deleteEstablishmentService, deleteLocalizationService, deleteSentimentAnalysisService, deleteSurveyResponseService, deleteTourismAttractionService, fetchAllTouchpointsService, fetchEstablishmentsService, fetchLocalizationsService, fetchSentimentAnalysisService, fetchSurveyResponsesService, fetchTourismAttractionsService, insertTopicDataService, updateEstablishmentService, updateLocalizationService, updateSentimentAnalysisService, updateSurveyResponseService, updateTourismAttractionService } from '../services/adminCRUD.js';
+import { createEstablishmentService, createLocalizationService, createSentimentAnalysisService, createTourismAttractionService, deleteEstablishmentService, deleteLocalizationService, deleteSentimentAnalysisService, deleteSurveyResponseService, deleteTourismAttractionService, fetchAllTouchpointsService, fetchEstablishmentsService, fetchLocalizationsService, fetchSentimentAnalysisService, fetchSurveyResponsesService, fetchTourismAttractionsService, fetchTranslatedTouchpointService, insertTopicDataService, updateEstablishmentService, updateLocalizationService, updateSentimentAnalysisService, updateSurveyResponseService, updateTourismAttractionService } from '../services/adminCRUD.js';
 dotenv.config();
 
 export const getAdminData = async (req, res, next) => {
@@ -648,5 +648,23 @@ export const fetchAllTouchpointsController = async (req, res, next) => {
     res.json(result);
   } catch (err) {
     next(`ERROR ON FETCHING ALL TOUCHPOINTS: ${err}`);
+  }
+};
+
+export const fetchTranslatedTouchpointController = async (req, res, next) => {
+  logger.info("GET /api/admin/tourismattractions/translate");
+  logger.warn(`BODY OF REQ --> ${JSON.stringify(req.body)}`);
+  try {
+    const { entityname, languagecode } = req.body;
+
+    if (!entityname || !languagecode) {
+      return res.status(400).json({ error: 'Missing required query parameters' });
+    }
+
+    const translatedName = await fetchTranslatedTouchpointService(entityname, languagecode);
+    logger.warn(`TRANSLATED NAAMMMEEEE --- ${translatedName}`);
+    res.json({ translatedName });
+  } catch (err) {
+    next(`ERROR ON FETCHING TRANSLATED TOUCHPOINT: ${err}`);
   }
 };

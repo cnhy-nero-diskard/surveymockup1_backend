@@ -220,10 +220,11 @@ export const submitEstablishmentSurveyResponse = async (req, res, next) => {
 };
 
 export const appendNewFeedback = async (req, res, next) => {
+  logger.database("POST /api/survey/feedback");
   const anonymousUserId = req.session.anonymousUserId; // Get the anonymous user ID from the session
   const feedback = req.body; // Assuming the feedback is passed in the request body
 
-  logger.database("Appending new feedback to survey responses");
+  // logger.database("Appending new feedback to survey responses");
   logger.warn(`FEEDBACK HUH -> ${JSON.stringify(feedback)}`);
 
   try {

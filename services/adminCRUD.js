@@ -795,6 +795,62 @@ export const fetchAllTouchpointsService = async () => {
   }
 };
 
+// Function to fetch translated tourism attraction name
+export const fetchTranslatedTouchpointService = async (entityName, languageCode) => {
+  logger.database("METHOD api/admin/tourismattractions - FETCH TRANSLATION");
+
+  try {
+    // Attempt the tourismattractions/tourismattraction_localizations query
+    const query = `
+      SELECT tl.translated_name
+      FROM public.tourismattractions ta
+      JOIN public.tourismattraction_localizations tl 
+        ON ta.id = tl.tourism_attraction_id
+      JOIN public.languages l 
+        ON l.id = tl.language_id
+      WHERE ta.ta_name = $1 
+        AND l.code = $2
+    `;
+    const values = [entityName, languageCode];
+    const result = await pool.query(query, values);
+
+    // If a valid result is found, return it immediately
+    if (result.rows.length > 0) {
+      return result.rows[0].translated_name;
+    } else {
+      // Otherwise, indicate that no rows were found and proceed to check establishments
+      logger.database(
+        `No record found in tourismattractions for entityName: ${entityName}, languageCode: ${languageCode}. Checking establishments next.`
+      );
+    }
+  } catch (err) {
+    // Log any error and then fall back to the establishments query
+    logger.error({ error: err.message });
+    logger.database(
+      `Error in tourismattractions query for entityName: ${entityName}, languageCode: ${languageCode}. Checking establishments next.`
+    );
+  }
+
+  // Fallback: query the establishments table using the 2-char language code as the column name
+  try {
+    // Make sure to sanitize or validate this if necessary
+    const columnName = languageCode.toLowerCase().trim();
+    const queryEstablishments = `
+      SELECT ${columnName} AS translation
+      FROM public.establishments
+      WHERE est_name = $1
+    `;
+    const valuesEst = [entityName];
+    const resultEst = await pool.query(queryEstablishments, valuesEst);
+
+    // Return the translation if found, otherwise null
+    return resultEst.rows.length > 0 ? resultEst.rows[0].translation : null;
+  } catch (err) {
+    logger.error({ error: err.message });
+    throw err;
+  }
+};
+
 // // Function to fetch duplicate establishment names
 // export const fetchDuplicateEstablishmentsService = async () => {
 //   logger.database("METHOD api/admin/establishments - FETCH DUPLICATES");
