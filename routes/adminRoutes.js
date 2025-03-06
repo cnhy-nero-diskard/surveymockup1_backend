@@ -8,6 +8,8 @@ import { validateTourismAttraction } from '../middleware/validationMiddleware.js
 import { getEstablishmentEnglishNames, purgeAnonymousUsers } from '../services/adminService.js';
 import { getMetrics } from '../metrics/metricsController.js';
 import { insertTopicDataService } from '../services/adminCRUD.js';
+import { groupResponsesByQuestionTitleService } from '../services/analyticsCRUD.js';
+import logger from "../middleware/logger.js";
 
 const router = express.Router();
 router.get('/api/admin/data', authenticate, getAdminData);
@@ -62,5 +64,18 @@ router.get('/api/admin/anonymous-users', fetchAnonymousUsersController);
 router.delete('/api/admin/all-anonymous-users', purgeAnonymousUsers);
 // router.get('api/log-stream', logstream)
 
+
+//TESTING ENDPOINT
+router.get('/api/test', async (req, res) => {
+    try {
+        // Insert test function here
+        const result = await groupResponsesByQuestionTitleService();
+        logger.admin(`TEST FUNC RESULT = ${(result)}`);
+        res.json(result);
+    } catch (error) {
+        console.error('Test endpoint error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 export default router;

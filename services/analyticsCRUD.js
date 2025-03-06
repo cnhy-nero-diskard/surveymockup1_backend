@@ -1,3 +1,6 @@
+import pool from "../config/db.js";
+import logger from "../middleware/logger.js";
+
 // Function to count rows with surveyquestion_ref value of 'FINISH'
 export const countFinishedSurveyResponsesService = async () => {
     logger.database("METHOD api/admin/countFinishedSurveyResponses");
@@ -72,12 +75,12 @@ export const fetchAgeSurveyResponsesService = async () => {
     logger.database("METHOD api/admin/fetchAgeSurveyResponses");
     try {
         const query = `
-            SELECT * FROM public.survey_responses
+            SELECT response_value FROM public.survey_responses
             WHERE surveyquestion_ref = 'AGE01';
         `;
         const result = await pool.query(query);
-        // Return all rows
-        return result.rows;
+        // Return all ages as an array
+        return result.rows.map(row => row.response_value);
     } catch (err) {
         logger.error({ error: err.message });
         throw err;
@@ -133,6 +136,56 @@ export const calculateAverageCompletionTimeService = async () => {
         const result = await pool.query(query);
         // Return the average completion time in minutes
         return result.rows[0].average_completion_time;
+    } catch (err) {
+        logger.error({ error: err.message });
+        throw err;
+    }
+};
+
+// Function to group and count rows by sentiment
+export const countSentimentAnalysisService = async () => {
+    logger.database("METHOD api/admin/countSentimentAnalysis");
+    try {
+        const query = `
+            SELECT sentiment, COUNT(*) as count
+            FROM public.sentiment_analysis
+            GROUP BY sentiment;
+        `;
+        const result = await pool.query(query);
+        // Transform the result into the desired structure
+        const sentimentCounts = result.rows.reduce((acc, row) => {
+            acc[row.sentiment] = parseInt(row.count, 10);
+            return acc;
+        }, {});
+        return sentimentCounts;
+    } catch (err) {
+        logger.error({ error: err.message });
+        throw err;
+    }
+};
+
+// Function to group survey responses by question title
+export const groupResponsesByQuestionTitleService = async () => {
+    logger.database("METHOD api/admin/groupResponsesByQuestionTitle");
+    try {
+        const query = `
+            SELECT 
+            sq.title,
+            sq.content,
+            array_agg(sr.response_value) as responses
+            FROM 
+            public.survey_responses sr
+            INNER JOIN public.survey_questions sq 
+            ON sr.surveyquestion_ref = sq.surveyresponses_ref
+            GROUP BY 
+            sq.title,
+            sq.content
+            ORDER BY 
+            sq.title;
+        `;
+        const result = await pool.query(query);
+        // logger.warn(`RESULT --> ${JSON.stringify(result)}`);
+        return result.rows;
     } catch (err) {
         logger.error({ error: err.message });
         throw err;
