@@ -49,27 +49,27 @@ export const fetchLangPerfSurveyResponsesService = async () => {
         throw err;
     }
 };
-// Function to tally rows according to their touchpoint column
-export const tallyTouchpointSurveyResponsesService = async () => {
-    logger.database("METHOD api/admin/tallyTouchpointSurveyResponses");
-    try {
-        const query = `
-            SELECT touchpoint, COUNT(*) as count
-            FROM public.survey_responses
-            GROUP BY touchpoint;
-        `;
-        const result = await pool.query(query);
-        // Transform the result into the desired structure
-        const tally = result.rows.reduce((acc, row) => {
-            acc[row.touchpoint] = parseInt(row.count, 10);
-            return acc;
-        }, {});
-        return tally;
-    } catch (err) {
-        logger.error({ error: err.message });
-        throw err;
-    }
-};
+// // Function to tally rows according to their touchpoint column
+// export const tallyTouchpointSurveyResponsesService = async () => {
+//     logger.database("METHOD api/admin/tallyTouchpointSurveyResponses");
+//     try {
+//         const query = `
+//             SELECT touchpoint, COUNT(*) as count
+//             FROM public.survey_responses
+//             GROUP BY touchpoint;
+//         `;
+//         const result = await pool.query(query);
+//         // Transform the result into the desired structure
+//         const tally = result.rows.reduce((acc, row) => {
+//             acc[row.touchpoint] = parseInt(row.count, 10);
+//             return acc;
+//         }, {});
+//         return tally;
+//     } catch (err) {
+//         logger.error({ error: err.message });
+//         throw err;
+//     }
+// };
 // Function to fetch all rows with surveyquestion_ref value of 'AGE01'
 export const fetchAgeSurveyResponsesService = async () => {
     logger.database("METHOD api/admin/fetchAgeSurveyResponses");
