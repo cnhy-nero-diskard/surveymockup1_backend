@@ -22,7 +22,7 @@ router.post('/api/survey/submit', validateSurveyResponse, submitSurveyResponseCo
 router.get('/api/admin/session-data', authenticate, getAdminSessionData);
 router.get('/metrics', getMetrics);
 router.get('/api/admin/establishments', getEstablishmentEnglishNamesController);
-router.get('/api/admin/survey-responses/open-ended', authenticate, getOpenEndedSurveyResponses);
+router.get('/api/admin/survey-responses/open-ended', getOpenEndedSurveyResponses);
 
 router.post('/api/hf-tokens', posthftokens);
 router.get('/api/hf-tokens', authenticate, gethftokens);

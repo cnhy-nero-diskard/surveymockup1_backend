@@ -88,17 +88,35 @@ export const getEstablishmentEnglishNames = async () => {
   return formattedResult;
 };
 
+
 export const fetchOpenEndedSurveyResponses = async () => {
   try {
-    const query = `
-    SELECT sr.response_id, sr.anonymous_user_id, sr.surveyquestion_ref, sr.created_at, sr.is_analyzed, sr.response_value
-    FROM survey_responses sr
-    JOIN survey_questions sq ON sr.surveyquestion_ref = sq.surveyresponses_ref
-    WHERE sq.questiontype = 'OPENENDED';
-  `;
-    const result = await pool.query(query);
-    logger.warn(`OPEN-ENDED SURVEY RESPONSES: ${result.rows.length}`);
-    return result.rows;
+    // First query for open-ended survey responses
+    const surveyResponseQuery = `
+      SELECT sr.response_id, sr.anonymous_user_id, sr.surveyquestion_ref, sr.created_at, sr.response_value
+      FROM survey_responses sr
+      JOIN survey_questions sq ON sr.surveyquestion_ref = sq.surveyresponses_ref
+      WHERE sq.questiontype = 'OPENENDED';
+    `;
+
+    // Second query for survey feedback responses
+    const surveyFeedbackQuery = `
+      SELECT sf.response_id, sf.anonymous_user_id, sf.surveyquestion_ref, sf.created_at AS created_at, sf.response_value
+      FROM survey_feedback sf;
+    `;
+
+    // Execute both queries
+    const surveyResponseResult = await pool.query(surveyResponseQuery);
+    const surveyFeedbackResult = await pool.query(surveyFeedbackQuery);
+
+    // Combine the results
+    const combinedResults = [
+      ...surveyResponseResult.rows,
+      ...surveyFeedbackResult.rows
+    ];
+
+    logger.warn(`OPEN-ENDED SURVEY RESPONSES AND FEEDBACK: ${combinedResults.length}`);
+    return combinedResults;
   } catch (err) {
     logger.error(err.message);
   }

@@ -540,27 +540,36 @@ export const fetchSurveyQuestionsController = async (req, res, next) => {
 
 export const createSentimentAnalysisController = async (req, res, next) => {
   logger.database("POST /api/admin/sentiment_analysis");
-  logger.warn(`SENTIMENT RESULTS BODY --> ${JSON.stringify(req.body.results)}`);
-  try {
-    const { results } = req.body;
 
+  // Extract the 'results' array from the request body
+  const { results } = req.body;
+  logger.warn(`SENTIMENT RESULTS BODY --> ${JSON.stringify(results)}`);
+
+  try {
+    // Validate that 'results' is a non-empty array
     if (!Array.isArray(results) || results.length === 0) {
-      return res.status(400).json({ error: 'Results should be a non-empty array of objects' });
+      return res.status(400).json({
+        error: 'Results should be a non-empty array of objects',
+      });
     }
 
+    // Validate that each object in the array contains all the required fields
     for (const result of results) {
       const { user_id, review_date, rating, sqref, sentiment, confidence } = result;
       if (!user_id || !review_date || !rating || !sqref || !sentiment || !confidence) {
-        return res.status(400).json({ error: `Missing required fields in one of the result objects: ${JSON.stringify(result)}` });
+        return res.status(400).json({
+          error: `Missing required fields in one of the result objects: ${JSON.stringify(result)}`,
+        });
       }
     }
 
-    const createdResults = await Promise.all(results.map(result =>
-      createSentimentAnalysisService(result.user_id, result.review_date, result.rating, result.sqref, result.sentiment, result.confidence)
-    ));
+    // Create the sentiment analysis entries in one bulk operation
+    const createdResults = await createSentimentAnalysisService(results);
 
+    // Respond with the newly created records
     res.status(201).json(createdResults);
   } catch (err) {
+    // Pass any errors to the error-handling middleware
     next(`ERROR ON CREATING SENTIMENT ANALYSIS: ${err}`);
   }
 };

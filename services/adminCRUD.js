@@ -560,21 +560,34 @@ export const deleteAnonymousUserService = async (anonymous_user_id) => {
   }
 };
 
-// Function to create a new sentiment analysis entry in the database
-export const createSentimentAnalysisService = async (sentimentDataArray) => {
+export const createSentimentAnalysisService = async (results) => {
   logger.database("METHOD api/admin/sentiment_analysis - CREATE BULK");
+
   try {
-    // SQL query to insert multiple sentiment analysis records
+    // Prepare values and build placeholders for each record in the array
+    const placeholders = [];
+    const values = [];
+
+    results.forEach(({ user_id, review_date, rating, sqref, sentiment, confidence }, index) => {
+      const startIdx = index * 6;
+      placeholders.push(
+        `($${startIdx + 1}, $${startIdx + 2}, $${startIdx + 3}, $${startIdx + 4}, $${startIdx + 5}, $${startIdx + 6})`
+      );
+      values.push(user_id, review_date, rating, sqref, sentiment, confidence);
+    });
+
+    // Build the SQL query for bulk insertion
     const query = `
       INSERT INTO public.sentiment_analysis (user_id, review_date, rating, sqref, sentiment, confidence)
-      VALUES ${sentimentDataArray.map((_, index) => `($${index * 6 + 1}, $${index * 6 + 2}, $${index * 6 + 3}, $${index * 6 + 4}, $${index * 6 + 5}, $${index * 6 + 6})`).join(', ')}
+      VALUES ${placeholders.join(', ')}
       RETURNING *;
     `;
-    const values = sentimentDataArray.flat();
+
+    // Execute the query and return the inserted rows
     const result = await pool.query(query, values);
-    // Return the newly created rows
     return result.rows;
   } catch (err) {
+    // Log any errors that occur
     logger.error({ error: err.message });
     throw err;
   }

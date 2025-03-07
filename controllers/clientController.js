@@ -50,7 +50,7 @@
 // controllers/clientController.js
 import pool from "../config/db.js";
 import logger from "../middleware/logger.js";
-import { getTourismAttractionLocalizations } from "../services/clientService.js";
+import { getTourismAttractionLocalizations, submitSurveyFeedback } from "../services/clientService.js";
 import { submitSurveyResponse } from "../services/surveyService.js";
 
 
@@ -218,27 +218,43 @@ export const submitEstablishmentSurveyResponse = async (req, res, next) => {
       next(err);
   }
 };
-
+//SPECIFICALLY HANDLES JSON
 export const appendNewFeedback = async (req, res, next) => {
   logger.database("POST /api/survey/feedback");
   const anonymousUserId = req.session.anonymousUserId; // Get the anonymous user ID from the session
   const feedback = req.body; // Assuming the feedback is passed in the request body
 
-  // logger.database("Appending new feedback to survey responses");
   logger.warn(`FEEDBACK HUH -> ${JSON.stringify(feedback)}`);
 
   try {
-    const query = `
+    // Step 1: Fetch the maximum response_id from the jsonb[] array and increment it by 1
+    const maxResponseIdQuery = `
+      SELECT
+          COALESCE(MAX((elem->>'response_id')::int), 0) + 1 AS next_response_id
+      FROM
+          survey_responses,
+          unnest(response_expandable) AS elem
+      WHERE
+          anonymous_user_id = $1 AND surveyquestion_ref = 'TPENT';
+    `;
+
+    const maxResponseIdResult = await pool.query(maxResponseIdQuery, [anonymousUserId]);
+    const nextResponseId = maxResponseIdResult.rows[0].next_response_id;
+
+    // Step 2: Add the response_id key-value pair to the feedback object
+    feedback.response_id = nextResponseId;
+
+    // Step 3: Update the survey_responses table by appending the new feedback to the jsonb[] array
+    const updateQuery = `
       UPDATE survey_responses
-      SET response_expandable = response_expandable || $1::jsonb
+      SET response_expandable = array_append(response_expandable, $1::jsonb)
       WHERE anonymous_user_id = $2 AND surveyquestion_ref = 'TPENT'
       RETURNING *;
     `;
-    
-    // Wrap feedback in an array before converting it to a JSON string
+
     const values = [feedback, anonymousUserId];
-    
-    const result = await pool.query(query, values);
+
+    const result = await pool.query(updateQuery, values);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Survey response not found" });
@@ -250,6 +266,7 @@ export const appendNewFeedback = async (req, res, next) => {
     res.status(500).send("Server error");
   }
 };
+
 export const getUserFeedback = async (req, res, next) => {
   logger.database('GET /api/survey/feedback');
   const { anonid } = req.query; 
@@ -282,5 +299,36 @@ export const getUserFeedback = async (req, res, next) => {
   } catch (error) {
     console.error("Error fetching feedback:", error.message);
     res.status(500).json({ error: "Server error" });
+  }
+};
+
+
+export const insertSurveyFeedback = async (req, res) => {
+  logger.database(`POST /api/survey/feedback SUBMITTING FEEDBACK`);
+  const { entity, rating, review, touchpoint } = req.body;
+  const anonid = req.session.anonymousUserId;
+
+  logger.warn(`ANONID ${anonid}`);
+
+  // Validate the input data
+  if (!entity || !rating || !review || !touchpoint) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  try {
+    const insertedFeedback = await submitSurveyFeedback({
+      entity,
+      rating,
+      review,
+      touchpoint,
+      anonid,
+    });
+    return res.status(201).json({
+      message: 'Feedback submitted successfully',
+      feedback: insertedFeedback,
+    });
+  } catch (error) {
+    console.error('Error inserting feedback:', error);
+    return res.status(500).json({ error: 'An error occurred while submitting feedback' });
   }
 };
