@@ -70,3 +70,4 @@ export const submitSurveyFeedback = async ({ entity, rating, review, touchpoint,
   const result = await pool.query(query, [entity, rating, review, touchpoint, anonid, 'TPENT']);
   return result.rows[0];
 };
+
