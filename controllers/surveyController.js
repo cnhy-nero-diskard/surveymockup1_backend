@@ -8,24 +8,25 @@ import { submitSurveyResponse, fetchSurveyResponsesByUser } from '../services/su
 
 export const submitSurveyResponseController = async (req, res, next) => {
     logger.info("POST /api/survey/submit");
-    const payload = `ATTEMPTING TO SEND ${JSON.stringify(req.body)}`;
+    const  surveyResponses = req.body.surveyResponses;
+    const payload = `ATTEMPTING TO SEND ${JSON.stringify(surveyResponses)}`;
     logger.database(payload);
 
     try {
         // Validate that req.body is an array
-        if (!Array.isArray(req.body)) {
+        if (!Array.isArray(surveyResponses)) {
             return res.status(400).send("Request body must be an array of response objects");
         }
 
         const anonymousUserId = req.session.anonymousUserId;
         
         // Process each response in the array
-        const responses = req.body.map(async (response) => {
+        const responses = surveyResponses.map(async (response) => {
             try {
                 // Validate individual response objects
-                if (!response.surveyId || !response.questionId || response.response === undefined) {
-                    throw new Error("Invalid response object");
-                }
+                // if (!response.surveyId || !response.questionId || response.response === undefined) {
+                //     throw new Error("Invalid response object");
+                // }
 
                 // Submit individual response
                 await submitSurveyResponse(response, anonymousUserId);
@@ -33,7 +34,7 @@ export const submitSurveyResponseController = async (req, res, next) => {
                 
                 return response;
             } catch (responseError) {
-                logger.error(`Error submitting response: ${responseError.message}`);
+                logger.error(`Error submitting response <${JSON.stringify(response)}>: ${responseError.message}`);
                 throw responseError; // Re-throw to be caught by the main try/catch
             }
         });

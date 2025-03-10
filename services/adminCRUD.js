@@ -1,3 +1,4 @@
+import { query } from "express";
 import pool from "../config/db.js";
 import logger from "../middleware/logger.js";
 
@@ -19,7 +20,7 @@ export const createLocalizationService = async (key, language_code, textContent,
     // Return the newly created row
     return result.rows[0];
   } catch (err) {
-    logger.error({error: err.message});
+    logger.error({ error: err.message });
     throw err;
   }
 };
@@ -31,7 +32,7 @@ export const fetchLocalizationsService = async (filters = {}) => {
     let query = `SELECT * FROM public.localization00`;
     const values = [];
     const conditions = [];
-  
+
     // Add filters to the query if provided
     if (filters.key) {
       conditions.push(`key = $${values.length + 1}`);
@@ -45,17 +46,17 @@ export const fetchLocalizationsService = async (filters = {}) => {
       conditions.push(`component = $${values.length + 1}`);
       values.push(filters.component);
     }
-  
+
     // Append conditions to the query if any exist
     if (conditions.length > 0) {
       query += ` WHERE ${conditions.join(' AND ')}`;
     }
-  
+
     const result = await pool.query(query, values);
     // Return all matching rows
     return result.rows;
   } catch (err) {
-    logger.error({error: err.message});
+    logger.error({ error: err.message });
     throw err;
   }
 };
@@ -76,7 +77,7 @@ export const updateLocalizationService = async (id, key, languageCode, textConte
     // Return the updated row
     return result.rows[0];
   } catch (err) {
-    logger.error({error: err.message});
+    logger.error({ error: err.message });
     throw err;
   }
 };
@@ -96,7 +97,7 @@ export const deleteLocalizationService = async (id) => {
     // Return the deleted row
     return result.rows[0];
   } catch (err) {
-    logger.error({error: err.message});
+    logger.error({ error: err.message });
     throw err;
   }
 };
@@ -125,7 +126,7 @@ export const createEstablishmentService = async (
     // Return the newly created row
     return result.rows[0];
   } catch (err) {
-    logger.error({error: err.message});
+    logger.error({ error: err.message });
     throw err;
   }
 };
@@ -137,7 +138,7 @@ export const fetchEstablishmentsService = async (filters = {}) => {
     let query = `SELECT * FROM public.establishments`;
     const values = [];
     const conditions = [];
-  
+
     // Add filters to the query if provided
     if (filters.estName) {
       conditions.push(`est_name ILIKE $${values.length + 1}`);
@@ -155,17 +156,17 @@ export const fetchEstablishmentsService = async (filters = {}) => {
       conditions.push(`barangay = $${values.length + 1}`);
       values.push(filters.barangay);
     }
-  
+
     // Append conditions to the query if any exist
     if (conditions.length > 0) {
       query += ` WHERE ${conditions.join(' AND ')}`;
     }
-  
+
     const result = await pool.query(query, values);
     // Return all matching rows
     return result.rows;
   } catch (err) {
-    logger.error({error: err.message});
+    logger.error({ error: err.message });
     throw err;
   }
 };
@@ -194,7 +195,7 @@ export const updateEstablishmentService = async (
     // Return the updated row
     return result.rows[0];
   } catch (err) {
-    logger.error({error: err.message});
+    logger.error({ error: err.message });
     throw err;
   }
 };
@@ -214,7 +215,7 @@ export const deleteEstablishmentService = async (id) => {
     // Return the deleted row
     return result.rows[0];
   } catch (err) {
-    logger.error({error: err.message});
+    logger.error({ error: err.message });
     throw err;
   }
 };
@@ -243,7 +244,7 @@ export const createTourismAttractionService = async (
     // Return the newly created row
     return result.rows[0];
   } catch (err) {
-    logger.error({error: err.message});
+    logger.error({ error: err.message });
     throw err;
   }
 };
@@ -255,7 +256,7 @@ export const fetchTourismAttractionsService = async (filters = {}) => {
     let query = `SELECT * FROM public.tourismattractions`;
     const values = [];
     const conditions = [];
-  
+
     // Add filters to the query if provided
     if (filters.taName) {
       conditions.push(`ta_name ILIKE $${values.length + 1}`);
@@ -281,17 +282,17 @@ export const fetchTourismAttractionsService = async (filters = {}) => {
       conditions.push(`ta_category = $${values.length + 1}`);
       values.push(filters.taCategory);
     }
-  
+
     // Append conditions to the query if any exist
     if (conditions.length > 0) {
       query += ` WHERE ${conditions.join(' AND ')}`;
     }
-  
+
     const result = await pool.query(query, values);
     // Return all matching rows
     return result.rows;
   } catch (err) {
-    logger.error({error: err.message});
+    logger.error({ error: err.message });
     throw err;
   }
 };
@@ -320,7 +321,7 @@ export const updateTourismAttractionService = async (
     // Return the updated row
     return result.rows[0];
   } catch (err) {
-    logger.error({error: err.message});
+    logger.error({ error: err.message });
     throw err;
   }
 };
@@ -340,7 +341,7 @@ export const deleteTourismAttractionService = async (id) => {
     // Return the deleted row
     return result.rows[0];
   } catch (err) {
-    logger.error({error: err.message});
+    logger.error({ error: err.message });
     throw err;
   }
 };
@@ -360,7 +361,7 @@ export const createSurveyResponseService = async (anonymous_user_id, surveyquest
     // Return the newly created row
     return result.rows[0];
   } catch (err) {
-    logger.error({error: err.message});
+    logger.error({ error: err.message });
     throw err;
   }
 };
@@ -383,7 +384,7 @@ export const fetchSurveyResponsesService = async (anonid = null) => {
     logger.warn(result.rowCount)
     return result.rows;
   } catch (err) {
-    logger.error({error: err.message});
+    logger.error({ error: err.message });
     throw err;
   }
 };
@@ -404,7 +405,7 @@ export const updateSurveyResponseService = async (response_id, response_value) =
     // Return the updated survey response row
     return result.rows[0];
   } catch (err) {
-    logger.error({error: err.message});
+    logger.error({ error: err.message });
     throw err;
   }
 };
@@ -424,7 +425,7 @@ export const deleteSurveyResponseService = async (anonymous_user_id) => {
     // Return all deleted survey response rows
     return result.rows;
   } catch (err) {
-    logger.error({error: err.message});
+    logger.error({ error: err.message });
     throw err;
   }
 };
@@ -442,7 +443,7 @@ export const fetchResponsesByUserAndQuestion = async (anonymous_user_id, surveyq
     // Return all matching survey response rows
     return result.rows;
   } catch (err) {
-    logger.error({error: err.message});
+    logger.error({ error: err.message });
     throw err;
   }
 };
@@ -724,7 +725,7 @@ export const fetchLocationsService = async (filters = {}) => {
     const result = await pool.query(query);
     return result.rows;
   } catch (err) {
-    logger.error({error: err.message});
+    logger.error({ error: err.message });
     throw err;
   }
 };
@@ -739,7 +740,7 @@ export const fetchLocationsServiceFiltered = async (filters = {}) => {
       WHERE location_type IN ('barangay', 'muncity', 'transportation')
     `;
     const result = await pool.query(query);
-    
+
     // Group results by location_type
     const groupedLocations = result.rows.reduce((acc, row) => {
       const { location_type, ...locationData } = row;
@@ -752,7 +753,7 @@ export const fetchLocationsServiceFiltered = async (filters = {}) => {
 
     return groupedLocations;
   } catch (err) {
-    logger.error({error: err.message});
+    logger.error({ error: err.message });
     throw err;
   }
 };
@@ -763,9 +764,9 @@ export const fetchAllTourismAttractionsService = async () => {
   try {
     const query = 'SELECT ta_name as name, short_id FROM public.tourismattractions';
     const result = await pool.query(query);
-    return {Attractions: result.rows};
+    return { Attractions: result.rows };
   } catch (err) {
-    logger.error({error: err.message});
+    logger.error({ error: err.message });
     throw err;
   }
 };
@@ -776,9 +777,9 @@ export const fetchAllEstablishmentsService = async () => {
   try {
     const query = 'SELECT est_name as name, short_id FROM public.establishments ORDER BY name ASC';
     const result = await pool.query(query);
-    return {Establishments: result.rows};
+    return { Establishments: result.rows };
   } catch (err) {
-    logger.error({error: err.message}); 
+    logger.error({ error: err.message });
     throw err;
   }
 };
@@ -803,7 +804,7 @@ export const fetchAllTouchpointsService = async () => {
       establishments: establishmentsData
     };
   } catch (err) {
-    logger.error({error: err.message});
+    logger.error({ error: err.message });
     throw err;
   }
 };
@@ -870,7 +871,7 @@ export const fetchTranslatedTouchpointService = async (entityName, languageCode)
 //   try {
 //     const query = `
 //       SELECT est_name, COUNT(*) as count
-//       FROM public.establishments 
+//       FROM public.establishments
 //       GROUP BY est_name
 //       HAVING COUNT(*) > 1
 //       ORDER BY count DESC;
@@ -889,9 +890,9 @@ export const fetchTranslatedTouchpointService = async (entityName, languageCode)
 //   try {
 //     // First identify duplicates and keep only the first occurrence (lowest ID)
 //     const query = `
-//       DELETE FROM public.establishments e1 
+//       DELETE FROM public.establishments e1
 //       USING public.establishments e2
-//       WHERE e1.est_name = e2.est_name 
+//       WHERE e1.est_name = e2.est_name
 //       AND e1.id > e2.id
 //       RETURNING e1.*;
 //     `;

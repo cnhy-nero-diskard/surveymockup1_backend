@@ -70,7 +70,7 @@ router.post('/api/touchpointlocal', fetchTranslatedTouchpointController);
 router.get('/api/test', async (req, res) => {
     try {
         // Insert test function here
-        const result = await calculateAverageCompletionTimeService() ;
+        const result = await fetchAllTouchpointsService() ;
         res.json(result);
     } catch (error) {
         console.error('Test endpoint error:', error);

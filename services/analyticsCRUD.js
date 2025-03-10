@@ -260,3 +260,27 @@ export const groupByLikertRatingService = async () => {
       throw error; 
     }
   };
+
+  //FETCH ALL THE COMPLETED 'FINISH' SIGNAL ROWS IN SURVEY_RESPONSES
+
+// returns {
+//     "finished": "8"
+//   }
+export const fetchAllFinishedRows = async () => {
+    logger.database("METHOD FETCHALL ROWS FINISHED");
+  
+    try {
+      const query = `
+      SELECT COUNT(*) as Finished
+      FROM survey_responses 
+      WHERE surveyquestion_ref = 'FINISH';`
+      const result = await pool.query(query);
+       return result.rows[0];
+      
+  
+    } catch (err) {
+      logger.error({ error: err.message });
+      throw err;
+  
+    }
+  }
