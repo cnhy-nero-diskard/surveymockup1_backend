@@ -27,23 +27,23 @@ export const login = async (req, res, next) => {
             expiresIn: '1h',
         });
 
-        // Update last_login and is_logged_in
         await pool.query('UPDATE admin_table SET last_login = NOW(), is_logged_in = TRUE WHERE username = $1', [username]);
 
-        // Set the token in an HttpOnly cookie
-        res.cookie('token', token, {
+        const cookieOptions = {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // Ensure this is true in production
-            sameSite: 'none', // Use 'none' for cross-site cookies 
+            secure: true,
+            sameSite: 'none', // Use 'none' for cross-site in production
             maxAge: 18000000, // 5 hours expiration
             path: '/',
-        }).status(200).send('Logged in successfully');
+        };
+
+        logger.info('Cookie options:', cookieOptions);
+
+        res.cookie('token', token, cookieOptions).status(200).send('Logged in successfully');
 
         logger.info('Response Headers:', res.getHeaders());
-
-        logger.admin(`Admin with username ${username} logged in successfully with token: ${token}`);
-
     } catch (err) {
+        logger.error('Error during login:', err);
         next(err);
     }
 };
@@ -63,7 +63,7 @@ export const logout = async (req, res, next) => {
         res.clearCookie('token', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            sameSite: 'none',
 
         }).status(200).send('Logged out successfully');
 
