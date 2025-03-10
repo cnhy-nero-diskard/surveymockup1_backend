@@ -230,9 +230,7 @@ app.get('/verify-cookie', (req, res) => {
 });
 
 
-// Start the server
-const PORT = 5000;
+const PORT = process.env.PORT || 5000; // Use environment variable PORT or default to 5000
 app.listen(PORT, () => {
-    logger.info(`Server is running on port ${process.env.PORT}`);
+    logger.info(`Server is running on port ${PORT}`); // Log the actual port being used
 });
-

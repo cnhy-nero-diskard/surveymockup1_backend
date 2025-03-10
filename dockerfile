@@ -1,14 +1,11 @@
-# Stage 1: Build the Node.js application
 FROM node:18-alpine
 
 WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm install # Or yarn install
 
-COPY . ./
+COPY . .
 
-EXPOSE 5000
-
-CMD ["npm", "start"]
+CMD ["node", "server.js"]
