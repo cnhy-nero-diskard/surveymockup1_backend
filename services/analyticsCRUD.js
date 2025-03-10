@@ -1,33 +1,52 @@
 import pool from "../config/db.js";
 import logger from "../middleware/logger.js";
+//EACH ONE OF THESE ARE HELPER FUNCTIONS. A CONTROLLER MAY CHOOSE TO AGGREGATE THEM
 
-// Function to count rows with surveyquestion_ref value of 'FINISH'
-export const countFinishedSurveyResponsesService = async () => {
-    logger.database("METHOD api/admin/countFinishedSurveyResponses");
-    try {
-      const query = `
-        SELECT COUNT(*) FROM public.survey_responses
-        WHERE surveyquestion_ref = 'FINISH';
-      `;
-      const result = await pool.query(query);
-      // Return the count of rows
-      return result.rows[0].count;
-    } catch (err) {
-      logger.error({ error: err.message });
-      throw err;
-    }
-  };
-  // Function to count rows with surveyquestion_ref value of 'LANGPERF'
+
+// // Function to count rows with surveyquestion_ref value of 'FINISH'
+// export const countFinishedSurveyResponsesService = async () => {
+//     logger.database("METHOD api/admin/countFinishedSurveyResponses");
+//     try {
+//       const query = `
+//         SELECT COUNT(*) FROM public.survey_responses
+//         WHERE surveyquestion_ref = 'FINISH';
+//       `;
+//       const result = await pool.query(query);
+//       // Return the count of rows
+//       return result.rows[0].count;
+//     } catch (err) {
+//       logger.error({ error: err.message });
+//       throw err;
+//     }
+//   };
+  // Function tally languages according to 'LANGPERF' returns 
   export const countLangPerfSurveyResponsesService = async () => {
     logger.database("METHOD api/admin/countLangPerfSurveyResponses");
     try {
       const query = `
-        SELECT COUNT(*) FROM public.survey_responses
-        WHERE surveyquestion_ref = 'LANGPERF';
-      `;
+
+      WITH langperf_responses AS (
+        SELECT 
+            response_value,
+            COUNT(*) AS occurrence_count
+        FROM 
+            survey_responses
+        WHERE 
+            surveyquestion_ref = 'LANGPERF'
+        GROUP BY 
+            response_value
+    )
+    SELECT 
+        response_value,
+        occurrence_count
+    FROM 
+        langperf_responses
+    ORDER BY 
+        response_value;
+          `;
       const result = await pool.query(query);
       // Return the count of rows
-      return result.rows[0].count;
+      return {result.rows[0].count};
     } catch (err) {
       logger.error({ error: err.message });
       throw err;

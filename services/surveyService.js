@@ -21,9 +21,10 @@ export const submitSurveyResponse = async (response, anonymousUserId) => {
         INSERT INTO survey_responses (
             anonymous_user_id, 
             surveyquestion_ref, 
-            response_value
+            response_value,
+            touchpoint
         )
-        VALUES ($1, $2, $3)
+        VALUES ($1, $2, $3, $4)
         ON CONFLICT (anonymous_user_id, surveyquestion_ref)
         DO UPDATE SET 
             response_value = EXCLUDED.response_value
@@ -33,7 +34,8 @@ export const submitSurveyResponse = async (response, anonymousUserId) => {
     const values = [
         anonymousUserId, 
         response.surveyquestion_ref,
-        response.response_value,    
+        response.response_value,  
+        response.touchpoint  
     ];
 
     try {
