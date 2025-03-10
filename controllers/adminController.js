@@ -9,7 +9,7 @@ import { logEmitter } from '../middleware/logger.js';
 import dotenv from 'dotenv';
 import { response } from 'express';
 import { createEstablishmentService, createLocalizationService, createSentimentAnalysisService, createTourismAttractionService, deleteEstablishmentService, deleteLocalizationService, deleteSentimentAnalysisService, deleteSurveyResponseService, deleteTourismAttractionService, fetchAllTouchpointsService, fetchEstablishmentsService, fetchLocalizationsService, fetchSentimentAnalysisService, fetchSurveyResponsesService, fetchTourismAttractionsService, fetchTranslatedTouchpointService, insertTopicDataService, updateEstablishmentService, updateLocalizationService, updateSentimentAnalysisService, updateSurveyResponseService, updateTourismAttractionService } from '../services/adminCRUD.js';
-import { groupByLikertRatingService } from '../services/analyticsCRUD.js';
+import { calculateAverageCompletionTimeService, fetchAllFinishedRows, fetchUnfinishedSurveys, groupByLikertRatingService } from '../services/analyticsCRUD.js';
 dotenv.config();
 
 export const getAdminData = async (req, res, next) => {
@@ -711,15 +711,103 @@ export const groupByLikertRatingController = async (req, res) => {
 
 
 export const getSurveyMetricsAnalyticsController = async (req, res, next) => {
+  logger.info("GET ALL METRICS");
   try {
-    
+    // Fetch data from your functions
+    const finishedRows = await fetchAllFinishedRows(); 
+    const totalSurveysCompleted = parseInt(finishedRows.finished); 
 
-    res.status(200).json({dummydata:"HELLO"});
-  } catch (error) {
-    console.error('Error in controller:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
+    const unfinishedSurveys = await fetchUnfinishedSurveys();
+    const totalSurveysUnCompleted = parseInt(unfinishedSurveys.count);
+
+    const totalMixedSurveys = totalSurveysCompleted + totalSurveysUnCompleted;
+    const completionRate = `${(totalSurveysCompleted/totalMixedSurveys).toFixed(4)*100}%`;
+    const dropOffRate = `${(totalSurveysUnCompleted/totalMixedSurveys).toFixed(4)*100}%`;
+
+    const aveCompletionTime = await calculateAverageCompletionTimeService();
+
+    // Add more function calls here as needed
+    // const anotherData = await anotherFunction();
+
+    // Construct the response structure
+    const responseData = {
+        totalSurveysCompleted: totalSurveysCompleted, // Insert fetched data
+        surveyCompletionRate: completionRate, // Percentage
+        averageTimeToComplete: aveCompletionTime,
+        dropOffRate: dropOffRate, 
+        surveyDistribution: {
+            TPMS: 50,
+            Establishment: 20,
+            Attraction: 52,
+            Transportation: 22,
+            Barangay: 23,
+        },
+        surveyResponsesByRegion: {
+            Korean: 70,
+            Chinese: 30,
+            Filipino: 15,
+            Japanese: 5,
+        },
+        surveyResponsesByAgeGroup: {
+            '18-24': 20,
+            '25-34': 50,
+            '35-44': 30,
+            '45-54': 15,
+            '55+': 5,
+        },
+        surveyResponsesByGender: {
+            male: 60,
+            female: 55,
+            other: 5,
+        },
+        surveyResponsesByIncomeLevel: {
+            low: 20,
+            medium: 70,
+            high: 30,
+        },
+        surveyResponsesByTenure: {
+            '0-1 years': 20,
+            '1-3 years': 30,
+            '3-5 years': 25,
+            '5+ years': 25,
+        },
+        surveyResponsesByFrequency: {
+            daily: 10,
+            weekly: 20,
+            monthly: 50,
+            quarterly: 15,
+            yearly: 5,
+        },
+        surveyResponsesByTimeOfDay: {
+            morning: 30,
+            afternoon: 40,
+            evening: 20,
+            night: 10,
+        },
+        surveyResponsesByMonth: {
+            january: 10,
+            february: 15,
+            march: 20,
+            april: 15,
+            may: 10,
+            june: 5,
+            july: 5,
+            august: 5,
+            september: 5,
+            october: 5,
+            november: 5,
+            december: 5,
+        },
+    };
+
+    // Respond with the constructed data
+    res.status(200).json({
+        success: true,
+        message: "Survey data retrieved successfully",
+        data: responseData,
     });
-  }
+} catch (error) {
+    // Handle errors
+    next(error);
+}
 }

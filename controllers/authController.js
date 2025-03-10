@@ -31,7 +31,7 @@ export const login = async (req, res, next) => {
 
         const cookieOptions = {
             httpOnly: true,
-            secure: true,
+            secure: false,
             sameSite: 'none', // Use 'none' for cross-site in production
             maxAge: 18000000, // 5 hours expiration
             path: '/',

@@ -92,12 +92,12 @@ export const getEstablishmentEnglishNames = async () => {
 export const fetchOpenEndedSurveyResponses = async () => {
   try {
     // First query for open-ended survey responses
-    const surveyResponseQuery = `
-      SELECT sr.response_id, sr.anonymous_user_id, sr.surveyquestion_ref, sr.created_at, sr.response_value
-      FROM survey_responses sr
-      JOIN survey_questions sq ON sr.surveyquestion_ref = sq.surveyresponses_ref
-      WHERE sq.questiontype = 'OPENENDED';
-    `;
+    // const surveyResponseQuery = `
+    //   SELECT sr.response_id, sr.anonymous_user_id, sr.surveyquestion_ref, sr.created_at, sr.response_value
+    //   FROM survey_responses sr
+    //   JOIN survey_questions sq ON sr.surveyquestion_ref = sq.surveyresponses_ref
+    //   WHERE sq.questiontype = 'OPENENDED';
+    // `;
 
     // Second query for survey feedback responses
     const surveyFeedbackQuery = `
@@ -106,12 +106,11 @@ export const fetchOpenEndedSurveyResponses = async () => {
     `;
 
     // Execute both queries
-    const surveyResponseResult = await pool.query(surveyResponseQuery);
+    // const surveyResponseResult = await pool.query(surveyResponseQuery);
     const surveyFeedbackResult = await pool.query(surveyFeedbackQuery);
 
     // Combine the results
     const combinedResults = [
-      ...surveyResponseResult.rows,
       ...surveyFeedbackResult.rows
     ];
 

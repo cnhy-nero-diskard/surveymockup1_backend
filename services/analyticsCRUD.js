@@ -249,7 +249,7 @@ export const groupByLikertRatingService = async () => {
 //     "finished": "8"
 //   }
 export const fetchAllFinishedRows = async () => {
-    logger.database("METHOD FETCHALL ROWS FINISHED");
+    logger.database("METHOD COUNT FINISHED USERS");
   
     try {
       const query = `
@@ -266,3 +266,25 @@ export const fetchAllFinishedRows = async () => {
   
     }
   }
+
+export const fetchUnfinishedSurveys = async () => {
+    logger.database("METHOD COUNT UNFINISHED USERS ");
+    try {
+        const query = `
+        SELECT COUNT(DISTINCT anonymous_user_id)
+        FROM survey_responses
+        WHERE anonymous_user_id IN (
+        SELECT anonymous_user_id
+        FROM survey_responses
+        WHERE surveyquestion_ref IN ('LANGPERF', 'FINISH')
+        GROUP BY anonymous_user_id
+        HAVING COUNT(DISTINCT surveyquestion_ref) < 2
+        );`
+        const result = await pool.query(query);
+        return result.rows[0];
+    } catch (error) {
+        logger.error({ error: err.message });
+        throw err;
+  
+    }
+}

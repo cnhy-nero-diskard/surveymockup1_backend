@@ -9,7 +9,7 @@ import { getEstablishmentEnglishNames, purgeAnonymousUsers } from '../services/a
 import { getMetrics } from '../metrics/metricsController.js';
 import { fetchAllTouchpointsService, fetchAllTourismAttractionsService, fetchLocationsService, fetchLocationsServiceFiltered, fetchTranslatedTouchpointService, insertTopicDataService } from '../services/adminCRUD.js';
 import logger from "../middleware/logger.js";
-import { calculateAverageCompletionTimeService, groupByLikertRatingService } from '../services/analyticsCRUD.js';
+import { calculateAverageCompletionTimeService, fetchAllFinishedRows, fetchUnfinishedSurveys, groupByLikertRatingService } from '../services/analyticsCRUD.js';
 
 const router = express.Router();
 router.get('/api/admin/data', authenticate, getAdminData);
@@ -72,7 +72,7 @@ router.get('/api/admin/getsurveymetrics', getSurveyMetricsAnalyticsController);
 router.get('/api/test', async (req, res) => {
     try {
         // Insert test function here
-        const result = await fetchAllTouchpointsService() ;
+        const result = await calculateAverageCompletionTimeService() ;
         res.json(result);
     } catch (error) {
         console.error('Test endpoint error:', error);
