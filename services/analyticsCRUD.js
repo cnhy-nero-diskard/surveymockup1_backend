@@ -109,6 +109,7 @@ export const fetchAndGroupFinishedSurveyResponsesByMonthService = async () => {
 
 
 // Function to calculate the average time to complete the survey (in minutes)
+
 export const calculateAverageCompletionTimeService = async () => {
     logger.database("METHOD api/admin/calculateAverageCompletionTime");
     try {
@@ -134,8 +135,27 @@ export const calculateAverageCompletionTimeService = async () => {
             FROM completion_times;
         `;
         const result = await pool.query(query);
-        // Return the average completion time in minutes
-        return result.rows[0].average_completion_time;
+        
+        // Get the average completion time in minutes
+        const average = result.rows[0].average_completion_time;
+        
+        if (average === null) {
+            return "No data available";
+        }
+
+        // Convert minutes to a formatted time string
+        const minutes = Math.floor(average);
+        const seconds = Math.round((average - minutes) * 60);
+
+        // If seconds equal 60, increment minutes and set seconds to 0
+        let formattedTime;
+        if (seconds === 60) {
+            formattedTime = `${minutes + 1} mins 0 secs`;
+        } else {
+            formattedTime = `${minutes} mins ${seconds} secs`;
+        }
+
+        return formattedTime;
     } catch (err) {
         logger.error({ error: err.message });
         throw err;
@@ -216,7 +236,7 @@ export const countEstablishmentsByTypeService = async () => {
 
 // Function to group all rows in surveyresponses according to surveyquestion_ref
 // IF the fkey corresponds to a row of questiontype "RATINGSCALE" within survey_questions
-export const groupByLikertRating = async () => {
+export const groupByLikertRatingService = async () => {
     const query = `
       SELECT
         sq.content,
@@ -234,9 +254,9 @@ export const groupByLikertRating = async () => {
   
     try {
       const result = await pool.query(query);
-      return result.rows; // Return the query results
+      return result.rows;
     } catch (error) {
       console.error('Error executing query:', error);
-      throw error; // Throw the error to be handled by the controller
+      throw error; 
     }
   };

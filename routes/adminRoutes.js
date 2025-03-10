@@ -1,6 +1,6 @@
 // routes/adminRoutes.js
 import express from 'express';
-import { getAdminData, getAdminSessionData, updateTourismAttractionController, addTourismAttractionController, deleteTourismAttractionController, posthftokens, gethftokens, analyzeSentiment, analyzeTopics, fetchAnonymousUsersController, logstream, getEstablishmentEnglishNamesController, getOpenEndedSurveyResponses, createLocalization, fetchLocalization, updateLocalization, deleteLocalization, createEstablishment, fetchEstablishments, updateEstablishment, deleteEstablishment, createTourismAttractionController, fetchTourismAttractionController, createSurveyResponseController, fetchSurveyResponsesController, updateSurveyResponseController, deleteSurveyResponseController, fetchSurveyQuestionsController, createSentimentAnalysisController, updateSentimentAnalysisController, fetchSentimentAnalysisController, deleteSentimentAnalysisController, insertTopicDataController, fetchAllTouchpointsController, fetchTranslatedTouchpointController } from '../controllers/adminController.js';
+import { getAdminData, getAdminSessionData, updateTourismAttractionController, addTourismAttractionController, deleteTourismAttractionController, posthftokens, gethftokens, analyzeSentiment, analyzeTopics, fetchAnonymousUsersController, logstream, getEstablishmentEnglishNamesController, getOpenEndedSurveyResponses, createLocalization, fetchLocalization, updateLocalization, deleteLocalization, createEstablishment, fetchEstablishments, updateEstablishment, deleteEstablishment, createTourismAttractionController, fetchTourismAttractionController, createSurveyResponseController, fetchSurveyResponsesController, updateSurveyResponseController, deleteSurveyResponseController, fetchSurveyQuestionsController, createSentimentAnalysisController, updateSentimentAnalysisController, fetchSentimentAnalysisController, deleteSentimentAnalysisController, insertTopicDataController, fetchAllTouchpointsController, fetchTranslatedTouchpointController, groupByLikertRatingController } from '../controllers/adminController.js';
 import { authenticate, authorizeAdmin } from '../middleware/authMiddleware.js';
 import { submitSurveyResponseController } from '../controllers/surveyController.js';
 import { validateSurveyResponse } from '../middleware/validationMiddleware.js';
@@ -9,6 +9,7 @@ import { getEstablishmentEnglishNames, purgeAnonymousUsers } from '../services/a
 import { getMetrics } from '../metrics/metricsController.js';
 import { fetchAllTouchpointsService, fetchAllTourismAttractionsService, fetchLocationsService, fetchLocationsServiceFiltered, fetchTranslatedTouchpointService, insertTopicDataService } from '../services/adminCRUD.js';
 import logger from "../middleware/logger.js";
+import { calculateAverageCompletionTimeService, groupByLikertRatingService } from '../services/analyticsCRUD.js';
 
 const router = express.Router();
 router.get('/api/admin/data', authenticate, getAdminData);
@@ -67,12 +68,9 @@ router.post('/api/touchpointlocal', fetchTranslatedTouchpointController);
 
 //TESTING ENDPOINT
 router.get('/api/test', async (req, res) => {
-    const { entityname, languagecode } = req.body;
-    logger.warn(`REQ TEST BODY: ${JSON.stringify(req.body)}`);
     try {
         // Insert test function here
-        const result = await fetchTranslatedTouchpointService(entityname, languagecode);
-        logger.admin(`TEST FUNC RESULT = ${(result.length)}`);
+        const result = await calculateAverageCompletionTimeService() ;
         res.json(result);
     } catch (error) {
         console.error('Test endpoint error:', error);

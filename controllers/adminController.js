@@ -9,6 +9,7 @@ import { logEmitter } from '../middleware/logger.js';
 import dotenv from 'dotenv';
 import { response } from 'express';
 import { createEstablishmentService, createLocalizationService, createSentimentAnalysisService, createTourismAttractionService, deleteEstablishmentService, deleteLocalizationService, deleteSentimentAnalysisService, deleteSurveyResponseService, deleteTourismAttractionService, fetchAllTouchpointsService, fetchEstablishmentsService, fetchLocalizationsService, fetchSentimentAnalysisService, fetchSurveyResponsesService, fetchTourismAttractionsService, fetchTranslatedTouchpointService, insertTopicDataService, updateEstablishmentService, updateLocalizationService, updateSentimentAnalysisService, updateSurveyResponseService, updateTourismAttractionService } from '../services/adminCRUD.js';
+import { groupByLikertRatingService } from '../services/analyticsCRUD.js';
 dotenv.config();
 
 export const getAdminData = async (req, res, next) => {
@@ -675,5 +676,35 @@ export const fetchTranslatedTouchpointController = async (req, res, next) => {
     res.json({ translatedName });
   } catch (err) {
     next(`ERROR ON FETCHING TRANSLATED TOUCHPOINT: ${err}`);
+  }
+};
+
+
+export const groupByLikertRatingController = async (req, res) => {
+  try {
+    const surveyResponses = await groupByLikertRatingService(); 
+
+    const formattedResponse = surveyResponses.map((row) => ({
+      question: row.content,
+      topic: row.surveytopic,
+      questionRef: row.surveyquestion_ref,
+      responses: {
+        Dissatisfied: row.dissatisfied,
+        Neutral: row.neutral,
+        Satisfied: row.satisfied,
+        VerySatisfied: row.verysatisfied,
+      },
+    }));
+
+    // Send the formatted response
+    res.json({
+      data: formattedResponse,
+    });
+  } catch (error) {
+    console.error('Error in controller:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
   }
 };
