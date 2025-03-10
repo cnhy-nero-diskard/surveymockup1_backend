@@ -708,3 +708,18 @@ export const groupByLikertRatingController = async (req, res) => {
     });
   }
 };
+
+
+export const getSurveyMetricsAnalyticsController = async (req, res, next) => {
+  try {
+
+    
+    res.status(200).json({dummydata:"HELLO"});
+  } catch (error) {
+    console.error('Error in controller:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+}

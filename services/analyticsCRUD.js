@@ -3,22 +3,6 @@ import logger from "../middleware/logger.js";
 //EACH ONE OF THESE ARE HELPER FUNCTIONS. A CONTROLLER MAY CHOOSE TO AGGREGATE THEM
 
 
-// // Function to count rows with surveyquestion_ref value of 'FINISH'
-// export const countFinishedSurveyResponsesService = async () => {
-//     logger.database("METHOD api/admin/countFinishedSurveyResponses");
-//     try {
-//       const query = `
-//         SELECT COUNT(*) FROM public.survey_responses
-//         WHERE surveyquestion_ref = 'FINISH';
-//       `;
-//       const result = await pool.query(query);
-//       // Return the count of rows
-//       return result.rows[0].count;
-//     } catch (err) {
-//       logger.error({ error: err.message });
-//       throw err;
-//     }
-//   };
   // Function tally languages according to 'LANGPERF' returns 
   export const countLangPerfSurveyResponsesService = async () => {
     logger.database("METHOD api/admin/countLangPerfSurveyResponses");
@@ -46,7 +30,7 @@ import logger from "../middleware/logger.js";
           `;
       const result = await pool.query(query);
       // Return the count of rows
-      return {result.rows[0].count};
+      return result.rows[0];
     } catch (err) {
       logger.error({ error: err.message });
       throw err;
