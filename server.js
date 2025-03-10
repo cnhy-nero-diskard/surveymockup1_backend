@@ -154,7 +154,7 @@ import pool from './config/db.js';
 import pgSession from 'connect-pg-simple';
 import { logstream } from './controllers/adminController.js';
 
-const requiredEnvVars = ['PATH_TO_CERT', 'PATH_TO_KEY', 'FRONTEND_URL', 'PORT'];
+const requiredEnvVars = [ 'FRONTEND_URL', 'PORT'];
 for (const envVar of requiredEnvVars) {
   if (!process.env[envVar]) {
     throw new Error(`Environment variable ${envVar} is not set`);

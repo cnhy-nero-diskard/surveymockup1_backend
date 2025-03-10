@@ -108,7 +108,7 @@ export const fetchAndGroupFinishedSurveyResponsesByMonthService = async () => {
 };
 
 
-// Function to calculate the average time to complete the survey
+// Function to calculate the average time to complete the survey (in minutes)
 export const calculateAverageCompletionTimeService = async () => {
     logger.database("METHOD api/admin/calculateAverageCompletionTime");
     try {
@@ -213,3 +213,30 @@ export const countEstablishmentsByTypeService = async () => {
         throw err;
     }
 };
+
+// Function to group all rows in surveyresponses according to surveyquestion_ref
+// IF the fkey corresponds to a row of questiontype "RATINGSCALE" within survey_questions
+export const groupByLikertRating = async () => {
+    const query = `
+      SELECT
+        sq.content,
+        sq.surveytopic,
+        sr.surveyquestion_ref,
+        COUNT(CASE WHEN sr.response_value = '1' THEN 1 END) AS Dissatisfied,
+        COUNT(CASE WHEN sr.response_value = '2' THEN 1 END) AS Neutral,
+        COUNT(CASE WHEN sr.response_value = '3' THEN 1 END) AS Satisfied,
+        COUNT(CASE WHEN sr.response_value = '4' THEN 1 END) AS VerySatisfied
+      FROM public.survey_responses sr
+      JOIN public.survey_questions sq ON sr.surveyquestion_ref = sq.surveyresponses_ref
+      WHERE sq.questiontype = 'RATINGSCALE'
+      GROUP BY sr.surveyquestion_ref, sq.content, sq.surveytopic;
+    `;
+  
+    try {
+      const result = await pool.query(query);
+      return result.rows; // Return the query results
+    } catch (error) {
+      console.error('Error executing query:', error);
+      throw error; // Throw the error to be handled by the controller
+    }
+  };
