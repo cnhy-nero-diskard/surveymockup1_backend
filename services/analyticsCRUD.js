@@ -3,11 +3,11 @@ import logger from "../middleware/logger.js";
 //EACH ONE OF THESE ARE HELPER FUNCTIONS. A CONTROLLER MAY CHOOSE TO AGGREGATE THEM
 
 
-  // Function tally languages according to 'LANGPERF' returns 
-  export const countLangPerfSurveyResponsesService = async () => {
+// Function tally languages according to 'LANGPERF' returns 
+export const countLangPerfSurveyResponsesService = async () => {
     logger.database("METHOD api/admin/countLangPerfSurveyResponses");
     try {
-      const query = `
+        const query = `
 
       WITH langperf_responses AS (
         SELECT 
@@ -28,14 +28,14 @@ import logger from "../middleware/logger.js";
     ORDER BY 
         response_value;
           `;
-      const result = await pool.query(query);
-      // Return the count of rows
-      return result.rows[0];
+        const result = await pool.query(query);
+        // Return the count of rows
+        return result.rows[0];
     } catch (err) {
-      logger.error({ error: err.message });
-      throw err;
+        logger.error({ error: err.message });
+        throw err;
     }
-  };
+};
 // Function to fetch all rows with surveyquestion_ref value of 'LANGPERF'
 export const fetchLangPerfSurveyResponsesService = async () => {
     logger.database("METHOD api/admin/fetchLangPerfSurveyResponses");
@@ -71,6 +71,13 @@ export const fetchAgeSurveyResponsesService = async () => {
 // Function to fetch and group rows with surveyquestion_ref value of 'FINISH' by month
 export const fetchAndGroupFinishedSurveyResponsesByMonthService = async () => {
     logger.database("METHOD api/admin/fetchAndGroupFinishedSurveyResponsesByMonth");
+    const restructureData = (data) => {
+        return data.reduce((acc, item) => {
+          const { month_bucket, response_count } = item;
+          acc[month_bucket] = response_count;
+          return acc;
+        }, {});
+    }  ;  
     try {
         const query = `
             SELECT TO_CHAR(created_at, 'Month YYYY') AS month_bucket, 
@@ -81,8 +88,9 @@ export const fetchAndGroupFinishedSurveyResponsesByMonthService = async () => {
             ORDER BY MIN(created_at);
         `;
         const result = await pool.query(query);
+        const clresult = restructureData(result.rows);
         // Return the grouped result
-        return result.rows;
+        return clresult;
     } catch (err) {
         logger.error({ error: err.message });
         throw err;
@@ -117,10 +125,10 @@ export const calculateAverageCompletionTimeService = async () => {
             FROM completion_times;
         `;
         const result = await pool.query(query);
-        
+
         // Get the average completion time in minutes
         const average = result.rows[0].average_completion_time;
-        
+
         if (average === null) {
             return "No data available";
         }
@@ -233,39 +241,39 @@ export const groupByLikertRatingService = async () => {
       WHERE sq.questiontype = 'RATINGSCALE'
       GROUP BY sr.surveyquestion_ref, sq.content, sq.surveytopic;
     `;
-  
-    try {
-      const result = await pool.query(query);
-      return result.rows;
-    } catch (error) {
-      console.error('Error executing query:', error);
-      throw error; 
-    }
-  };
 
-  //FETCH ALL THE COMPLETED 'FINISH' SIGNAL ROWS IN SURVEY_RESPONSES
+    try {
+        const result = await pool.query(query);
+        return result.rows;
+    } catch (error) {
+        console.error('Error executing query:', error);
+        throw error;
+    }
+};
+
+//FETCH ALL THE COMPLETED 'FINISH' SIGNAL ROWS IN SURVEY_RESPONSES
 
 // returns {
 //     "finished": "8"
 //   }
 export const fetchAllFinishedRows = async () => {
     logger.database("METHOD COUNT FINISHED USERS");
-  
+
     try {
-      const query = `
+        const query = `
       SELECT COUNT(*) as Finished
       FROM survey_responses 
       WHERE surveyquestion_ref = 'FINISH';`
-      const result = await pool.query(query);
-       return result.rows[0];
-      
-  
+        const result = await pool.query(query);
+        return result.rows[0];
+
+
     } catch (err) {
-      logger.error({ error: err.message });
-      throw err;
-  
+        logger.error({ error: err.message });
+        throw err;
+
     }
-  }
+}
 
 export const fetchUnfinishedSurveys = async () => {
     logger.database("METHOD COUNT UNFINISHED USERS ");
@@ -285,6 +293,94 @@ export const fetchUnfinishedSurveys = async () => {
     } catch (error) {
         logger.error({ error: err.message });
         throw err;
-  
+
+    }
+}
+
+export const fetchTouchpointsService = async () => {
+    const restructureData = (data) => {
+        return data.reduce((acc, item) => {
+          const { touchpoint, total_unique_user_count } = item;
+          acc[touchpoint] = total_unique_user_count;
+          return acc;
+        }, {});
+      };
+      
+    logger.database("METHOD COUNT TOUCHPOINTS");
+    try {
+        const query = `SELECT
+    COALESCE(sr.touchpoint, sf.touchpoint) AS touchpoint,
+    COALESCE(sr.unique_user_count, 0) + COALESCE(sf.unique_user_count, 0) AS total_unique_user_count
+FROM
+    (SELECT touchpoint, COUNT(DISTINCT anonymous_user_id) AS unique_user_count FROM public.survey_responses GROUP BY touchpoint) AS sr
+FULL OUTER JOIN
+    (SELECT touchpoint, COUNT(DISTINCT anonymous_user_id) AS unique_user_count FROM public.survey_feedback GROUP BY touchpoint) AS sf ON sr.touchpoint = sf.touchpoint;`
+        const result = await pool.query(query);
+        const clresult = restructureData(result.rows)
+
+        return clresult;
+    } catch (error) {
+        logger.error({ error: err.message });
+        throw err;
+
+    }
+}
+
+export const fetchByTimeOfDay = async () => {
+    const restructureData = (data) => {
+        return data.reduce((acc, item) => {
+          const { time_period, distinct_user_count } = item;
+          acc[time_period] = distinct_user_count;
+          return acc;
+        }, {});
+      };
+
+    logger.database("METHOD COUNTING TIME OF DAY FOR SURVEYS");
+    try{    
+        const query = `SELECT 
+        CASE 
+            WHEN EXTRACT(HOUR FROM created_at) < 6 THEN 'Dusk'
+            WHEN EXTRACT(HOUR FROM created_at) < 12 THEN 'Morning'
+            WHEN EXTRACT(HOUR FROM created_at) < 18 THEN 'Afternoon'
+            ELSE 'Night'
+        END AS time_period,
+        COUNT(DISTINCT anonymous_user_id) AS distinct_user_count
+        FROM public.survey_responses
+        GROUP BY 1
+        ORDER BY 1;`;
+    const result = await pool.query(query);
+    return restructureData(result.rows);
+    }catch(error){
+        logger.error({ error: err.message });
+        throw err;
+    }
+}
+
+export const fetchByNationality = async () => {
+    logger.database('METHOD FETCHING TALLY BY NATIONALITY');
+    const restructureData = (data) => {
+        return data.reduce((acc, item) => {
+          const { response_value, count_response_value } = item;
+          acc[response_value] = count_response_value;
+          return acc;
+        }, {});
+      };
+
+    try {
+        const query = `
+
+                -- Tally similar response_value for surveyquestion_ref = 'NAT01'
+                SELECT response_value, COUNT(*) AS count_response_value
+                FROM public.survey_responses
+                WHERE surveyquestion_ref = 'NAT01'
+                GROUP BY response_value
+                ORDER BY count_response_value DESC;`
+        const result = await pool.query(query);
+        return restructureData(result.rows);
+        
+    } catch (error) {
+        logger.error({ error: err.message });
+        throw err;
+
     }
 }

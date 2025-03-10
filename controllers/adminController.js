@@ -9,7 +9,7 @@ import { logEmitter } from '../middleware/logger.js';
 import dotenv from 'dotenv';
 import { response } from 'express';
 import { createEstablishmentService, createLocalizationService, createSentimentAnalysisService, createTourismAttractionService, deleteEstablishmentService, deleteLocalizationService, deleteSentimentAnalysisService, deleteSurveyResponseService, deleteTourismAttractionService, fetchAllTouchpointsService, fetchEstablishmentsService, fetchLocalizationsService, fetchSentimentAnalysisService, fetchSurveyResponsesService, fetchTourismAttractionsService, fetchTranslatedTouchpointService, insertTopicDataService, updateEstablishmentService, updateLocalizationService, updateSentimentAnalysisService, updateSurveyResponseService, updateTourismAttractionService } from '../services/adminCRUD.js';
-import { calculateAverageCompletionTimeService, fetchAllFinishedRows, fetchUnfinishedSurveys, groupByLikertRatingService } from '../services/analyticsCRUD.js';
+import { calculateAverageCompletionTimeService, fetchAllFinishedRows, fetchAndGroupFinishedSurveyResponsesByMonthService, fetchByNationality, fetchByTimeOfDay, fetchTouchpointsService, fetchUnfinishedSurveys, groupByLikertRatingService } from '../services/analyticsCRUD.js';
 dotenv.config();
 
 export const getAdminData = async (req, res, next) => {
@@ -712,6 +712,13 @@ export const groupByLikertRatingController = async (req, res) => {
 
 export const getSurveyMetricsAnalyticsController = async (req, res, next) => {
   logger.info("GET ALL METRICS");
+  const restructureData = (data) => {
+    return data.reduce((acc, item) => {
+      const { touchpoint, total_unique_user_count } = item;
+      acc[touchpoint] = total_unique_user_count;
+      return acc;
+    }, {});
+  };
   try {
     // Fetch data from your functions
     const finishedRows = await fetchAllFinishedRows(); 
@@ -726,6 +733,13 @@ export const getSurveyMetricsAnalyticsController = async (req, res, next) => {
 
     const aveCompletionTime = await calculateAverageCompletionTimeService();
 
+    const getTouchpoints = await fetchTouchpointsService();
+    
+    const surveyResponsesByMonth = await fetchAndGroupFinishedSurveyResponsesByMonthService();
+    const getTimeofDay = await fetchByTimeOfDay();
+    const surveyResponsesByRegion = fetchByNationality();
+
+
     // Add more function calls here as needed
     // const anotherData = await anotherFunction();
 
@@ -735,19 +749,8 @@ export const getSurveyMetricsAnalyticsController = async (req, res, next) => {
         surveyCompletionRate: completionRate, // Percentage
         averageTimeToComplete: aveCompletionTime,
         dropOffRate: dropOffRate, 
-        surveyDistribution: {
-            TPMS: 50,
-            Establishment: 20,
-            Attraction: 52,
-            Transportation: 22,
-            Barangay: 23,
-        },
-        surveyResponsesByRegion: {
-            Korean: 70,
-            Chinese: 30,
-            Filipino: 15,
-            Japanese: 5,
-        },
+        surveyDistribution:getTouchpoints,
+        surveyResponsesByRegion,
         surveyResponsesByAgeGroup: {
             '18-24': 20,
             '25-34': 50,
@@ -759,11 +762,6 @@ export const getSurveyMetricsAnalyticsController = async (req, res, next) => {
             male: 60,
             female: 55,
             other: 5,
-        },
-        surveyResponsesByIncomeLevel: {
-            low: 20,
-            medium: 70,
-            high: 30,
         },
         surveyResponsesByTenure: {
             '0-1 years': 20,
@@ -779,25 +777,9 @@ export const getSurveyMetricsAnalyticsController = async (req, res, next) => {
             yearly: 5,
         },
         surveyResponsesByTimeOfDay: {
-            morning: 30,
-            afternoon: 40,
-            evening: 20,
-            night: 10,
+            getTimeofDay
         },
-        surveyResponsesByMonth: {
-            january: 10,
-            february: 15,
-            march: 20,
-            april: 15,
-            may: 10,
-            june: 5,
-            july: 5,
-            august: 5,
-            september: 5,
-            october: 5,
-            november: 5,
-            december: 5,
-        },
+        surveyResponsesByMonth
     };
 
     // Respond with the constructed data
