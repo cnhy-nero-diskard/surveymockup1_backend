@@ -169,9 +169,8 @@ const app = express();
 
 app.use(express.json());
 app.use(cors({
-  origin: process.env.FRONTEND_URL, // Allow requests from your React frontend
+  origin: process.env.FRONTEND_URL, // Allow requests from React frontend
   credentials: true, // Allow cookies to be sent
-  
 }));
 
 

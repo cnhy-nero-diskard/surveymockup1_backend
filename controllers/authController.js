@@ -32,12 +32,13 @@ export const login = async (req, res, next) => {
 
         // Set the token in an HttpOnly cookie
         res.cookie('token', token, {
-            httpOnly: true, // Prevent JavaScript access
-            secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in production
-            // Prevent CSRF attacks
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production', // Ensure this is true in production
+            sameSite: 'none', // Use 'none' for cross-site cookies 
             maxAge: 18000000, // 5 hours expiration
-            path: '/', // Ensure the cookie is sent for all routes
+            path: '/',
         }).status(200).send('Logged in successfully');
+
         logger.info('Response Headers:', res.getHeaders());
 
         logger.admin(`Admin with username ${username} logged in successfully with token: ${token}`);
