@@ -9,7 +9,7 @@ import { logEmitter } from '../middleware/logger.js';
 import dotenv from 'dotenv';
 import { response } from 'express';
 import { createEstablishmentService, createLocalizationService, createSentimentAnalysisService, createTourismAttractionService, deleteEstablishmentService, deleteLocalizationService, deleteSentimentAnalysisService, deleteSurveyResponseService, deleteTourismAttractionService, fetchAllTouchpointsService, fetchEstablishmentsService, fetchLocalizationsService, fetchSentimentAnalysisService, fetchSurveyResponsesService, fetchTourismAttractionsService, fetchTranslatedTouchpointService, insertTopicDataService, updateEstablishmentService, updateLocalizationService, updateSentimentAnalysisService, updateSurveyResponseService, updateTourismAttractionService } from '../services/adminCRUD.js';
-import { calculateAverageCompletionTimeService, fetchAllFinishedRows, fetchAndGroupFinishedSurveyResponsesByMonthService, fetchByNationality, fetchByTimeOfDay, fetchTouchpointsService, fetchUnfinishedSurveys, groupByLikertRatingService } from '../services/analyticsCRUD.js';
+import { calculateAverageCompletionTimeService, fetchAllFinishedRows, fetchAndGroupFinishedSurveyResponsesByMonthService, fetchByAgeGroup, fetchByCountryResidence, fetchByGender, fetchByNationality, fetchByTimeOfDay, fetchTouchpointsService, fetchUnfinishedSurveys, groupByLikertRatingService } from '../services/analyticsCRUD.js';
 dotenv.config();
 
 export const getAdminData = async (req, res, next) => {
@@ -728,16 +728,18 @@ export const getSurveyMetricsAnalyticsController = async (req, res, next) => {
     const totalSurveysUnCompleted = parseInt(unfinishedSurveys.count);
 
     const totalMixedSurveys = totalSurveysCompleted + totalSurveysUnCompleted;
-    const completionRate = `${(totalSurveysCompleted/totalMixedSurveys).toFixed(4)*100}%`;
-    const dropOffRate = `${(totalSurveysUnCompleted/totalMixedSurveys).toFixed(4)*100}%`;
-
+    const completionRate = (totalSurveysCompleted/totalMixedSurveys).toFixed(4)*100;
+    const dropOffRate = parseFloat(((totalSurveysUnCompleted/totalMixedSurveys)*100).toFixed(2));
     const aveCompletionTime = await calculateAverageCompletionTimeService();
 
     const getTouchpoints = await fetchTouchpointsService();
     
     const surveyResponsesByMonth = await fetchAndGroupFinishedSurveyResponsesByMonthService();
     const getTimeofDay = await fetchByTimeOfDay();
-    const surveyResponsesByRegion = fetchByNationality();
+    const surveyResponsesByRegion = await fetchByNationality();
+    const ageGroup = await fetchByAgeGroup();
+    const genderGroup = await fetchByGender();
+    const surveyResponsesByCountry = await fetchByCountryResidence();
 
 
     // Add more function calls here as needed
@@ -751,35 +753,11 @@ export const getSurveyMetricsAnalyticsController = async (req, res, next) => {
         dropOffRate: dropOffRate, 
         surveyDistribution:getTouchpoints,
         surveyResponsesByRegion,
-        surveyResponsesByAgeGroup: {
-            '18-24': 20,
-            '25-34': 50,
-            '35-44': 30,
-            '45-54': 15,
-            '55+': 5,
-        },
-        surveyResponsesByGender: {
-            male: 60,
-            female: 55,
-            other: 5,
-        },
-        surveyResponsesByTenure: {
-            '0-1 years': 20,
-            '1-3 years': 30,
-            '3-5 years': 25,
-            '5+ years': 25,
-        },
-        surveyResponsesByFrequency: {
-            daily: 10,
-            weekly: 20,
-            monthly: 50,
-            quarterly: 15,
-            yearly: 5,
-        },
-        surveyResponsesByTimeOfDay: {
-            getTimeofDay
-        },
-        surveyResponsesByMonth
+        surveyResponsesByAgeGroup: ageGroup,
+        surveyResponsesByGender: genderGroup,
+        surveyResponsesByTimeOfDay:getTimeofDay,
+        surveyResponsesByMonth,
+        surveyResponsesByCountry, 
     };
 
     // Respond with the constructed data

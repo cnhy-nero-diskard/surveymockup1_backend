@@ -1,3 +1,4 @@
+import { query } from "express";
 import pool from "../config/db.js";
 import logger from "../middleware/logger.js";
 //EACH ONE OF THESE ARE HELPER FUNCTIONS. A CONTROLLER MAY CHOOSE TO AGGREGATE THEM
@@ -301,7 +302,7 @@ export const fetchTouchpointsService = async () => {
     const restructureData = (data) => {
         return data.reduce((acc, item) => {
           const { touchpoint, total_unique_user_count } = item;
-          acc[touchpoint] = total_unique_user_count;
+          acc[touchpoint] = parseInt(total_unique_user_count);
           return acc;
         }, {});
       };
@@ -356,6 +357,34 @@ export const fetchByTimeOfDay = async () => {
     }
 }
 
+export const fetchByCountryResidence = async () => {
+    logger.database('METHOD FETCHING TALLY BY COUNTRY OF RESIDENCE');
+    const restructureData = (data) => {
+        return data.reduce((acc, item) => {
+          const { response_value, count_response_value } = item;
+          acc[response_value] = count_response_value;
+          return acc;
+        }, {});
+      };
+
+    try {
+        const query = `
+
+                -- Tally similar response_value for surveyquestion_ref = 'NAT01'
+                SELECT response_value, COUNT(*) AS count_response_value
+                FROM public.survey_responses
+                WHERE surveyquestion_ref = 'CNTRY'
+                GROUP BY response_value
+                ORDER BY count_response_value DESC;`
+        const result = await pool.query(query);
+        return restructureData(result.rows);
+        
+    } catch (error) {
+        logger.error({ error: err.message });
+        throw err;
+
+    }
+}
 export const fetchByNationality = async () => {
     logger.database('METHOD FETCHING TALLY BY NATIONALITY');
     const restructureData = (data) => {
@@ -378,6 +407,81 @@ export const fetchByNationality = async () => {
         const result = await pool.query(query);
         return restructureData(result.rows);
         
+    } catch (error) {
+        logger.error({ error: err.message });
+        throw err;
+
+    }
+}
+
+export const fetchByAgeGroup = async () =>{
+    const restructureData = (data) => {
+        return data.reduce((acc, item) => {
+          const { age_group, response_count } = item;
+          acc[age_group] = response_count;
+          return acc;
+        }, {});
+      };
+
+    logger.database("METHOD FETCH BY AGE GROUP");
+    try {
+        const query = `SELECT
+        CASE
+            WHEN CAST(response_value AS INTEGER) BETWEEN 0 AND 9 THEN '0-9'
+            WHEN CAST(response_value AS INTEGER) BETWEEN 10 AND 19 THEN '10-19'
+            WHEN CAST(response_value AS INTEGER) BETWEEN 20 AND 29 THEN '20-29'
+            WHEN CAST(response_value AS INTEGER) BETWEEN 30 AND 39 THEN '30-39'
+            WHEN CAST(response_value AS INTEGER) BETWEEN 40 AND 49 THEN '40-49'
+            WHEN CAST(response_value AS INTEGER) BETWEEN 50 AND 59 THEN '50-59'
+            WHEN CAST(response_value AS INTEGER) BETWEEN 60 AND 69 THEN '60-69'
+            WHEN CAST(response_value AS INTEGER) BETWEEN 70 AND 79 THEN '70-79'
+            WHEN CAST(response_value AS INTEGER) BETWEEN 80 AND 89 THEN '80-89'
+            WHEN CAST(response_value AS INTEGER) BETWEEN 90 AND 99 THEN '90-99'
+            ELSE '100+' --Catching ages 100 and above, or invalid numbers
+            END AS age_group,
+            COUNT(*) AS response_count
+        FROM
+            public.survey_responses
+        WHERE
+            surveyquestion_ref = 'AGE01'
+        GROUP BY
+            age_group
+        ORDER BY
+            age_group;`
+
+        const result = await pool.query(query);
+    return restructureData(result.rows)
+    } catch (error) {
+        logger.error({ error: err.message });
+        throw err;
+
+    }
+}
+
+export const fetchByGender = async () => {
+    const restructureData = (data) => {
+        return data.reduce((acc, item) => {
+          const { response_value, response_count } = item;
+          acc[response_value] = response_count;
+          return acc;
+        }, {});}
+
+    try {
+        const query = `
+        SELECT
+            response_value,
+            COUNT(*) AS response_count
+        FROM
+            public.survey_responses
+        WHERE
+            surveyquestion_ref = 'SEX01'
+        GROUP BY
+            response_value
+        ORDER BY
+        response_count DESC;`
+        const result = await pool.query(query);
+
+        return restructureData(result.rows)
     } catch (error) {
         logger.error({ error: err.message });
         throw err;
