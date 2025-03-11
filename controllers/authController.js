@@ -24,14 +24,14 @@ export const login = async (req, res, next) => {
         }
 
         const token = jwt.sign({ username: admin.username }, process.env.JWT_SECRET, {
-            expiresIn: '1h',
+            expiresIn: '3h',
         });
 
         await pool.query('UPDATE admin_table SET last_login = NOW(), is_logged_in = TRUE WHERE username = $1', [username]);
 
         const cookieOptions = {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: false,     //TRUE IF IN PRODUCTION
             // sameSite: 'none', // UNCOMMENT THIS WHEN YOU'RE DEPLOYING THIS in production
             maxAge: 18000000, // 5 hours expiration
             path: '/',
