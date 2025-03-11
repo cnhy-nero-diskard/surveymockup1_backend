@@ -456,7 +456,7 @@ export const fetchByAgeGroup = async () =>{
         const result = await pool.query(query);
     return restructureData(result.rows)
     } catch (error) {
-        logger.error({ error: err.message });
+        logger.error({ error: error.message });
         throw err;
 
     }

@@ -32,7 +32,7 @@ export const login = async (req, res, next) => {
         const cookieOptions = {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            // sameSite: 'none', // comment out on local dev ONLY
+            // sameSite: 'none', // UNCOMMENT THIS WHEN YOU'RE DEPLOYING THIS in production
             maxAge: 18000000, // 5 hours expiration
             path: '/',
         };
