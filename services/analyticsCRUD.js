@@ -70,15 +70,18 @@ export const fetchAgeSurveyResponsesService = async () => {
     }
 };
 // Function to fetch and group rows with surveyquestion_ref value of 'FINISH' by month
+
 export const fetchAndGroupFinishedSurveyResponsesByMonthService = async () => {
     logger.database("METHOD api/admin/fetchAndGroupFinishedSurveyResponsesByMonth");
     const restructureData = (data) => {
         return data.reduce((acc, item) => {
           const { month_bucket, response_count } = item;
-          acc[month_bucket] = response_count;
+          // Replace multiple spaces with a single space and trim whitespace
+          const cleanedMonth = month_bucket.replace(/\s+/g, ' ').trim();
+          acc[cleanedMonth] = response_count;
           return acc;
         }, {});
-    }  ;  
+    };  
     try {
         const query = `
             SELECT TO_CHAR(created_at, 'Month YYYY') AS month_bucket, 
@@ -97,6 +100,7 @@ export const fetchAndGroupFinishedSurveyResponsesByMonthService = async () => {
         throw err;
     }
 };
+
 
 
 // Function to calculate the average time to complete the survey (in minutes)

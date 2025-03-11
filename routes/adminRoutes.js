@@ -72,7 +72,7 @@ router.get('/api/admin/getsurveymetrics', getSurveyMetricsAnalyticsController);
 router.get('/api/test', async (req, res) => {
     try {
         // Insert test function here
-        const result = await fetchByCountryResidence() ;
+        const result = await fetchAndGroupFinishedSurveyResponsesByMonthService() ;
         res.json(result);
     } catch (error) {
         console.error('Test endpoint error:', error);
