@@ -31,8 +31,8 @@ export const login = async (req, res, next) => {
 
         const cookieOptions = {
             httpOnly: true,
-            secure: false,     //TRUE IF IN PRODUCTION
-            // sameSite: 'none', // UNCOMMENT THIS WHEN YOU'RE DEPLOYING THIS in production
+            secure: true,     //TRUE IF IN PRODUCTION
+            sameSite: 'none', // UNCOMMENT THIS WHEN YOU'RE DEPLOYING THIS in production
             maxAge: 18000000, // 5 hours expiration
             path: '/',
         };
@@ -62,7 +62,7 @@ export const logout = async (req, res, next) => {
         // Clear the token cookie
         res.clearCookie('token', {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: true,
             sameSite: 'none',
 
         }).status(200).send('Logged out successfully');
