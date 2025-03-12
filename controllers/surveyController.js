@@ -29,12 +29,13 @@ export const submitSurveyResponseController = async (req, res, next) => {
                 // }
 
                 // Submit individual response
-                await submitSurveyResponse(response, anonymousUserId);
-                logger.info(`Successfully submitted response for survey ${response.surveyId} and question ${response.questionId}`);
+                const a = await submitSurveyResponse(response, anonymousUserId);
+                logger.database(`Successfully submitted response for survey ${JSON.stringify(a)}`);
                 
-                return response;
+                // return a
             } catch (responseError) {
                 logger.error(`Error submitting response <${JSON.stringify(response)}>: ${responseError.message}`);
+                res.status(404).json({error: responseError})
                 throw responseError; // Re-throw to be caught by the main try/catch
             }
         });

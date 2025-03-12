@@ -14,10 +14,10 @@ import logger from '../middleware/logger.js';
  * @throws {Error} If there is an issue with the database query.
  */
 export const submitSurveyResponse = async (response, anonymousUserId) => {
-    const logtext = `[POST][SURVEY_RESPONSES] -- UserID ${anonymousUserId} has SUBMITTED ${response.surveyquestion_ref}`;
-    logger.database(logtext);
-
-    const query = `
+    try {
+        const logtext = ` METHOD submit survey responses --> database`;
+        logger.database(logtext);
+        const query = `
         INSERT INTO survey_responses (
             anonymous_user_id, 
             surveyquestion_ref, 
@@ -31,18 +31,18 @@ export const submitSurveyResponse = async (response, anonymousUserId) => {
         RETURNING *;
     `;
 
-    const values = [
-        anonymousUserId, 
-        response.surveyquestion_ref,
-        response.response_value,  
-        response.touchpoint  
-    ];
+        const values = [
+            anonymousUserId,
+            response.surveyquestion_ref,
+            response.response_value,
+            response.touchpoint
+        ];
 
-    try {
+
         const result = await pool.query(query, values);
         return result.rows[0];
     } catch (err) {
-        logger.error(`Error submitting survey response: ${err.message}`);
+        logger.error(`METHOD Error INSERTING INTO DATABASE: ${err.message}`);
         throw err;
     }
 };
