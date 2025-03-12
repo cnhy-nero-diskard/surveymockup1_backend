@@ -75,13 +75,13 @@ export const fetchAndGroupFinishedSurveyResponsesByMonthService = async () => {
     logger.database("METHOD api/admin/fetchAndGroupFinishedSurveyResponsesByMonth");
     const restructureData = (data) => {
         return data.reduce((acc, item) => {
-          const { month_bucket, response_count } = item;
-          // Replace multiple spaces with a single space and trim whitespace
-          const cleanedMonth = month_bucket.replace(/\s+/g, ' ').trim();
-          acc[cleanedMonth] = response_count;
-          return acc;
+            const { month_bucket, response_count } = item;
+            // Replace multiple spaces with a single space and trim whitespace
+            const cleanedMonth = month_bucket.replace(/\s+/g, ' ').trim();
+            acc[cleanedMonth] = response_count;
+            return acc;
         }, {});
-    };  
+    };
     try {
         const query = `
             SELECT TO_CHAR(created_at, 'Month YYYY') AS month_bucket, 
@@ -135,7 +135,7 @@ export const calculateAverageCompletionTimeService = async () => {
         const average = result.rows[0].average_completion_time;
 
         if (average === null) {
-            return "No data available";
+            return null;
         }
 
         // Convert minutes to a formatted time string
@@ -305,21 +305,21 @@ export const fetchUnfinishedSurveys = async () => {
 export const fetchTouchpointsService = async () => {
     const restructureData = (data) => {
         return data.reduce((acc, item) => {
-          const { touchpoint, total_unique_user_count } = item;
-          acc[touchpoint] = parseInt(total_unique_user_count);
-          return acc;
+            const { touchpoint, total_unique_user_count } = item;
+            acc[touchpoint] = parseInt(total_unique_user_count);
+            return acc;
         }, {});
-      };
-      
+    };
+
     logger.database("METHOD COUNT TOUCHPOINTS");
     try {
         const query = `SELECT
-    COALESCE(sr.touchpoint, sf.touchpoint) AS touchpoint,
-    COALESCE(sr.unique_user_count, 0) + COALESCE(sf.unique_user_count, 0) AS total_unique_user_count
-FROM
-    (SELECT touchpoint, COUNT(DISTINCT anonymous_user_id) AS unique_user_count FROM public.survey_responses GROUP BY touchpoint) AS sr
-FULL OUTER JOIN
-    (SELECT touchpoint, COUNT(DISTINCT anonymous_user_id) AS unique_user_count FROM public.survey_feedback GROUP BY touchpoint) AS sf ON sr.touchpoint = sf.touchpoint;`
+        COALESCE(sr.touchpoint, sf.touchpoint) AS touchpoint,
+        COALESCE(sr.unique_user_count, 0) + COALESCE(sf.unique_user_count, 0) AS total_unique_user_count
+        FROM
+        (SELECT touchpoint, COUNT(DISTINCT anonymous_user_id) AS unique_user_count FROM public.survey_responses GROUP BY touchpoint) AS sr
+        FULL OUTER JOIN
+        (SELECT touchpoint, COUNT(DISTINCT anonymous_user_id) AS unique_user_count FROM public.survey_feedback GROUP BY touchpoint) AS sf ON sr.touchpoint = sf.touchpoint;`
         const result = await pool.query(query);
         const clresult = restructureData(result.rows)
 
@@ -334,14 +334,14 @@ FULL OUTER JOIN
 export const fetchByTimeOfDay = async () => {
     const restructureData = (data) => {
         return data.reduce((acc, item) => {
-          const { time_period, distinct_user_count } = item;
-          acc[time_period] = distinct_user_count;
-          return acc;
+            const { time_period, distinct_user_count } = item;
+            acc[time_period] = distinct_user_count;
+            return acc;
         }, {});
-      };
+    };
 
     logger.database("METHOD COUNTING TIME OF DAY FOR SURVEYS");
-    try{    
+    try {
         const query = `SELECT 
         CASE 
             WHEN EXTRACT(HOUR FROM created_at) < 6 THEN 'Dusk'
@@ -353,9 +353,9 @@ export const fetchByTimeOfDay = async () => {
         FROM public.survey_responses
         GROUP BY 1
         ORDER BY 1;`;
-    const result = await pool.query(query);
-    return restructureData(result.rows);
-    }catch(error){
+        const result = await pool.query(query);
+        return restructureData(result.rows);
+    } catch (error) {
         logger.error({ error: err.message });
         throw err;
     }
@@ -365,11 +365,11 @@ export const fetchByCountryResidence = async () => {
     logger.database('METHOD FETCHING TALLY BY COUNTRY OF RESIDENCE');
     const restructureData = (data) => {
         return data.reduce((acc, item) => {
-          const { response_value, count_response_value } = item;
-          acc[response_value] = count_response_value;
-          return acc;
+            const { response_value, count_response_value } = item;
+            acc[response_value] = count_response_value;
+            return acc;
         }, {});
-      };
+    };
 
     try {
         const query = `
@@ -382,7 +382,7 @@ export const fetchByCountryResidence = async () => {
                 ORDER BY count_response_value DESC;`
         const result = await pool.query(query);
         return restructureData(result.rows);
-        
+
     } catch (error) {
         logger.error({ error: err.message });
         throw err;
@@ -393,11 +393,11 @@ export const fetchByNationality = async () => {
     logger.database('METHOD FETCHING TALLY BY NATIONALITY');
     const restructureData = (data) => {
         return data.reduce((acc, item) => {
-          const { response_value, count_response_value } = item;
-          acc[response_value] = count_response_value;
-          return acc;
+            const { response_value, count_response_value } = item;
+            acc[response_value] = count_response_value;
+            return acc;
         }, {});
-      };
+    };
 
     try {
         const query = `
@@ -410,7 +410,7 @@ export const fetchByNationality = async () => {
                 ORDER BY count_response_value DESC;`
         const result = await pool.query(query);
         return restructureData(result.rows);
-        
+
     } catch (error) {
         logger.error({ error: err.message });
         throw err;
@@ -418,14 +418,14 @@ export const fetchByNationality = async () => {
     }
 }
 
-export const fetchByAgeGroup = async () =>{
+export const fetchByAgeGroup = async () => {
     const restructureData = (data) => {
         return data.reduce((acc, item) => {
-          const { age_group, response_count } = item;
-          acc[age_group] = response_count;
-          return acc;
+            const { age_group, response_count } = item;
+            acc[age_group] = response_count;
+            return acc;
         }, {});
-      };
+    };
 
     logger.database("METHOD FETCH BY AGE GROUP");
     try {
@@ -454,7 +454,7 @@ export const fetchByAgeGroup = async () =>{
             age_group;`
 
         const result = await pool.query(query);
-    return restructureData(result.rows)
+        return restructureData(result.rows)
     } catch (error) {
         logger.error({ error: error.message });
         throw err;
@@ -465,10 +465,11 @@ export const fetchByAgeGroup = async () =>{
 export const fetchByGender = async () => {
     const restructureData = (data) => {
         return data.reduce((acc, item) => {
-          const { response_value, response_count } = item;
-          acc[response_value] = response_count;
-          return acc;
-        }, {});}
+            const { response_value, response_count } = item;
+            acc[response_value] = response_count;
+            return acc;
+        }, {});
+    }
 
     try {
         const query = `

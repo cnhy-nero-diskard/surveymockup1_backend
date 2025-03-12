@@ -737,7 +737,7 @@ export const fetchLocationsServiceFiltered = async (filters = {}) => {
   try {
     const query = `
       SELECT location_type, name, short_id FROM public.locations 
-      WHERE location_type IN ('barangay', 'muncity', 'transportation')
+      WHERE location_type IN ('barangay', 'muncity', 'transportation', 'island', 'point')
     `;
     const result = await pool.query(query);
 
