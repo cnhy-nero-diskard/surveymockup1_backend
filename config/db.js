@@ -3,7 +3,7 @@
 import pg from 'pg';
 import dotenv from 'dotenv';
 import logger from '../middleware/logger.js';
-
+import fs from 'fs';
 dotenv.config();
 
 const requiredEnvVars = ['PG_USER', 'PG_HOST', 'PG_DATABASE', 'PG_PASSWORD', 'PG_PORT', 'JWT_SECRET'];
@@ -20,36 +20,30 @@ try {
   process.exit(1); // Exit with error code
 }
 
-/**
- * Creates a new PostgreSQL connection pool using the provided configuration.
- * 
- * The configuration is sourced from environment variables:
- * - PG_USER: The username for the PostgreSQL database.
- * - PG_HOST: The host address of the PostgreSQL database.
- * - PG_DATABASE: The name of the PostgreSQL database.
- * - PG_PASSWORD: The password for the PostgreSQL database.
- * - PG_PORT: The port number on which the PostgreSQL database is running.
- * 
- * @type {pg.Pool}
- */
 let pool;
 
 try {
-  pool = new pg.Pool({
+  const config = {
     user: process.env.PG_USER,
     host: process.env.PG_HOST,
     database: process.env.PG_DATABASE,
     password: process.env.PG_PASSWORD,
     port: process.env.PG_PORT,
-    // Optional: Add connection timeout
     connectionTimeoutMillis: 5000,
-  });
-
+  };
+  
+  // Add SSL configuration only in production mode
+  if (process.env.NODE_ENV === 'production') {
+    config.ssl = {
+      rejectUnauthorized: true,
+      ca: fs.readFileSync('./certs/server-ca.pem').toString(),
+    };
+  }
+  
+  pool = new pg.Pool(config);
   // Handle connection errors
   pool.on('error', (err, client) => {
     console.error('Unexpected error on idle client', err);
-    // Optional: You can attempt to re-connect here
-    // or just let the pool handle it internally
   });
 
   // Optional: Handle successful connection
