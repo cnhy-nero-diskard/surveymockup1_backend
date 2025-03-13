@@ -748,7 +748,8 @@ export const getSurveyMetricsAnalyticsController = async (req, res, next) => {
     // Construct the response structure
     const responseData = {
         totalSurveysCompleted: totalSurveysCompleted, // Insert fetched data
-        surveyCompletionRate: completionRate, // Percentage
+        totalSurveys: totalMixedSurveys,
+        surveyCompletionRate: completionRate,
         averageTimeToComplete: aveCompletionTime,
         dropOffRate: dropOffRate, 
         surveyDistribution:getTouchpoints,
