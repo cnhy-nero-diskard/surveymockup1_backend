@@ -1,15 +1,10 @@
 import logger from "../middleware/logger.js";
-
 export const queryHuggingFace = async (data, apiToken, modelUrl) => {
     logger.info("Querying Hugging Face model");
     logger.info(`Data: ${JSON.stringify(data)}`);
     logger.info(`API Token: ${apiToken}`);
     logger.info(`Model URL: ${modelUrl}`);
-
-    // data = `{"inputs": "${data}"}`;
     data = {inputs: data};
-
-
     const queryModel = async () => {
         try {
             const response = await fetch(modelUrl, {
@@ -27,7 +22,7 @@ export const queryHuggingFace = async (data, apiToken, modelUrl) => {
 
             if (result.error && result.error.includes("503 Service Unavailable")) {
                 // If the model is still loading, wait for the estimated time and retry
-                const estimatedTime = 5; // seconds
+                const estimatedTime = 10; // seconds
                 logger.info(`Model is loading. Retrying in ${estimatedTime} seconds...`);
                 await new Promise((resolve) => setTimeout(resolve, estimatedTime * 1000));
                 return queryModel(); // Retry the request
