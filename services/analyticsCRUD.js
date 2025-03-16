@@ -496,72 +496,103 @@ export const fetchByGender = async () => {
 
 export const fetchEntityinSurveyFeedbackService = async () => {
     try {
-        // Query to group by entity and count ratings and languages
+        // Query to group by entity (short_id) and count ratings, languages, and touchpoints
         const feedbackQuery = `
-
-        SELECT
-        entity,
-        SUM(language_count) AS total_responses,
-        SUM(CASE WHEN rating = '1' THEN 1 ELSE 0 END) AS rating_1,
-        SUM(CASE WHEN rating = '2' THEN 1 ELSE 0 END) AS rating_2,
-        SUM(CASE WHEN rating = '3' THEN 1 ELSE 0 END) AS rating_3,
-        SUM(CASE WHEN rating = '4' THEN 1 ELSE 0 END) AS rating_4,
-        jsonb_object_agg(language, language_count) AS language_counts
-    FROM (
-        SELECT
-            entity,
-            rating,
-            language,
-            COUNT(*) AS language_count
-        FROM
-            public.survey_feedback
-        GROUP BY
-            entity, rating, language
-    ) AS subquery
-    GROUP BY
-        entity;
-            `;
+            SELECT
+                sf.entity,
+                sf.touchpoint,
+                COUNT(*) AS total_responses,
+                SUM(CASE WHEN sf.rating = '1' THEN 1 ELSE 0 END) AS rating_1,
+                SUM(CASE WHEN sf.rating = '2' THEN 1 ELSE 0 END) AS rating_2,
+                SUM(CASE WHEN sf.rating = '3' THEN 1 ELSE 0 END) AS rating_3,
+                SUM(CASE WHEN sf.rating = '4' THEN 1 ELSE 0 END) AS rating_4,
+                jsonb_object_agg(sf.language, language_count) AS language_counts
+            FROM (
+                SELECT
+                    entity,
+                    touchpoint,
+                    rating,
+                    language,
+                    COUNT(*) AS language_count
+                FROM
+                    public.survey_feedback
+                GROUP BY
+                    entity, touchpoint, rating, language
+            ) AS sf
+            GROUP BY
+                sf.entity, sf.touchpoint;
+        `;
 
         const feedbackResult = await pool.query(feedbackQuery);
 
-        // Query to get entity names from establishments, tourismattractions, and locations
-        // Query to get entity names from establishments, tourismattractions, and locations using short_id
-        const entityNamesQuery = `
+        // Query to get entity details from establishments, tourismattractions, and locations using short_id
+        const entityDetailsQuery = `
             SELECT
                 'establishment' AS type,
                 short_id,
-                est_name AS name
+                est_name AS name,
+                type AS establishment_type,
+                barangay,
+                city_mun,
+                NULL AS location_type,
+                NULL AS type_code,
+                NULL AS ta_category,
+                NULL AS ntdp_category
             FROM
                 public.establishments
             UNION ALL
             SELECT
                 'tourismattraction' AS type,
                 short_id,
-                ta_name AS name
+                ta_name AS name,
+                NULL AS establishment_type,
+                brgy AS barangay,
+                city_mun,
+                NULL AS location_type,
+                type_code,
+                ta_category,
+                ntdp_category
             FROM
                 public.tourismattractions
             UNION ALL
             SELECT
                 'location' AS type,
                 short_id,
-                name
+                name,
+                NULL AS establishment_type,
+                NULL AS barangay,
+                NULL AS city_mun,
+                location_type,
+                NULL AS type_code,
+                NULL AS ta_category,
+                NULL AS ntdp_category
             FROM
                 public.locations;
         `;
 
-        const entityNamesResult = await pool.query(entityNamesQuery);
+        const entityDetailsResult = await pool.query(entityDetailsQuery);
 
-        // Create a map of short_id to their names
-        const entityNameMap = entityNamesResult.rows.reduce((acc, row) => {
-            acc[row.short_id] = row.name;
+        // Create a map of short_id to their details
+        const entityDetailsMap = entityDetailsResult.rows.reduce((acc, row) => {
+            acc[row.short_id] = {
+                name: row.name,
+                type: row.type,
+                establishment_type: row.establishment_type,
+                location_type: row.location_type,
+                barangay: row.barangay,
+                city_mun: row.city_mun,
+                ta_category: row.ta_category,
+                ntdp_category: row.ntdp_category
+            };
             return acc;
         }, {});
 
-        // Transform the feedback result to replace entity (short_id) with names
+        // Transform the feedback result to include touchpoint and entity details
         const transformedResult = feedbackResult.rows.map(row => {
-            const entityName = entityNameMap[row.entity] || row.entity; // Fallback to short_id if name not found
+            const entityDetails = entityDetailsMap[row.entity] || {};
             return {
-                entity: entityName,
+                entity: entityDetails.name || row.entity, // Fallback to short_id if name not found
+                touchpoint: row.touchpoint,
                 total_responses: row.total_responses,
                 rating: {
                     1: row.rating_1,
@@ -569,10 +600,18 @@ export const fetchEntityinSurveyFeedbackService = async () => {
                     3: row.rating_3,
                     4: row.rating_4
                 },
-                language: row.language_counts
+                language: row.language_counts,
+                details: {
+                    type: entityDetails.type,
+                    establishment_type: entityDetails.establishment_type,
+                    location_type: entityDetails.location_type,
+                    barangay: entityDetails.barangay,
+                    city_mun: entityDetails.city_mun,
+                    ta_category: entityDetails.ta_category,
+                    ntdp_category: entityDetails.ntdp_category
+                }
             };
         });
-
         return transformedResult
 
     } catch (error) {
