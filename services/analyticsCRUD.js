@@ -493,3 +493,90 @@ export const fetchByGender = async () => {
 
     }
 }
+
+export const fetchEntityinSurveyFeedbackService = async () => {
+    try {
+        // Query to group by entity and count ratings and languages
+        const feedbackQuery = `
+
+        SELECT
+        entity,
+        SUM(language_count) AS total_responses,
+        SUM(CASE WHEN rating = '1' THEN 1 ELSE 0 END) AS rating_1,
+        SUM(CASE WHEN rating = '2' THEN 1 ELSE 0 END) AS rating_2,
+        SUM(CASE WHEN rating = '3' THEN 1 ELSE 0 END) AS rating_3,
+        SUM(CASE WHEN rating = '4' THEN 1 ELSE 0 END) AS rating_4,
+        jsonb_object_agg(language, language_count) AS language_counts
+    FROM (
+        SELECT
+            entity,
+            rating,
+            language,
+            COUNT(*) AS language_count
+        FROM
+            public.survey_feedback
+        GROUP BY
+            entity, rating, language
+    ) AS subquery
+    GROUP BY
+        entity;
+            `;
+
+        const feedbackResult = await pool.query(feedbackQuery);
+
+        // Query to get entity names from establishments, tourismattractions, and locations
+        // Query to get entity names from establishments, tourismattractions, and locations using short_id
+        const entityNamesQuery = `
+            SELECT
+                'establishment' AS type,
+                short_id,
+                est_name AS name
+            FROM
+                public.establishments
+            UNION ALL
+            SELECT
+                'tourismattraction' AS type,
+                short_id,
+                ta_name AS name
+            FROM
+                public.tourismattractions
+            UNION ALL
+            SELECT
+                'location' AS type,
+                short_id,
+                name
+            FROM
+                public.locations;
+        `;
+
+        const entityNamesResult = await pool.query(entityNamesQuery);
+
+        // Create a map of short_id to their names
+        const entityNameMap = entityNamesResult.rows.reduce((acc, row) => {
+            acc[row.short_id] = row.name;
+            return acc;
+        }, {});
+
+        // Transform the feedback result to replace entity (short_id) with names
+        const transformedResult = feedbackResult.rows.map(row => {
+            const entityName = entityNameMap[row.entity] || row.entity; // Fallback to short_id if name not found
+            return {
+                entity: entityName,
+                total_responses: row.total_responses,
+                rating: {
+                    1: row.rating_1,
+                    2: row.rating_2,
+                    3: row.rating_3,
+                    4: row.rating_4
+                },
+                language: row.language_counts
+            };
+        });
+
+        return transformedResult
+
+    } catch (error) {
+        console.error('Error fetching survey feedback:', error);
+
+    }
+}
