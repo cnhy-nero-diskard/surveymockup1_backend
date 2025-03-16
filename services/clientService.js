@@ -60,14 +60,14 @@ export const getTourismAttractionLocalizations = async (languageCode) => {
     throw err;
   }
 };
-export const submitSurveyFeedback = async ({ entity, rating, review, touchpoint, anonid }) => {
+export const submitSurveyFeedback = async ({ entity, rating, review, touchpoint, anonid, language }) => {
   const query = `
-    INSERT INTO survey_feedback (entity, rating, response_value, touchpoint, anonymous_user_id, surveyquestion_ref)
-    VALUES ($1, $2, $3, $4, $5, $6)
+    INSERT INTO survey_feedback (entity, rating, response_value, touchpoint, anonymous_user_id, surveyquestion_ref, language)
+    VALUES ($1, $2, $3, $4, $5, $6, $7 )
     RETURNING response_id, created_at;
   `;
 
-  const result = await pool.query(query, [entity, rating, review, touchpoint, anonid, 'TPENT']);
+  const result = await pool.query(query, [entity, rating, review, touchpoint, anonid, 'TPENT', language]);
   return result.rows[0];
 };
 

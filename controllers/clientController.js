@@ -305,7 +305,7 @@ export const getUserFeedback = async (req, res, next) => {
 
 export const insertSurveyFeedback = async (req, res) => {
   logger.database(`POST /api/survey/feedback SUBMITTING FEEDBACK`);
-  const { entity, rating, review, touchpoint } = req.body;
+  const { entity, rating, review, touchpoint, language } = req.body;
   const anonid = req.session.anonymousUserId;
 
   logger.warn(`ANONID ${anonid}`);
@@ -322,6 +322,7 @@ export const insertSurveyFeedback = async (req, res) => {
       review,
       touchpoint,
       anonid,
+      language
     });
     return res.status(201).json({
       message: 'Feedback submitted successfully',

@@ -595,12 +595,13 @@ export const fetchEntityinSurveyFeedbackService = async () => {
                 touchpoint: row.touchpoint,
                 total_responses: row.total_responses,
                 rating: {
-                    1: row.rating_1,
-                    2: row.rating_2,
-                    3: row.rating_3,
-                    4: row.rating_4
+                    Dissatisfied: row.rating_1,
+                    Neutral: row.rating_2,
+                    Satisfied: row.rating_3,
+                    VerySatisfied: row.rating_4
                 },
                 language: row.language_counts,
+                mentionedTerms:{"About Establishment: Cozy stuff": 5},
                 details: {
                     type: entityDetails.type,
                     establishment_type: entityDetails.establishment_type,
