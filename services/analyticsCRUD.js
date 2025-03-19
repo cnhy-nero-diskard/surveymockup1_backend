@@ -621,7 +621,7 @@ export const fetchEntityinSurveyFeedbackService = async () => {
     }
 }
 
-export const getSurveyTally = async () => {
+export const getAllSurveyTally = async () => {
     const client = await pool.connect();
     try {
         // Step 1: Retrieve all surveyresponses_ref from survey_questions
