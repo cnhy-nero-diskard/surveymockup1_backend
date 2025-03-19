@@ -20,7 +20,7 @@ export const getTextsFromDB = async (language, component) => {
 
 export const getTourismAttractionLocalizations = async (languageCode) => {
   try {
-    // First, get the language_id from the languages table using the languageCode
+    // 1. Get the language_id from the languages table using the languageCode
     const languageQuery = 'SELECT id FROM languages WHERE code = $1';
     const languageResult = await pool.query(languageQuery, [languageCode]);
 
@@ -30,36 +30,81 @@ export const getTourismAttractionLocalizations = async (languageCode) => {
 
     const languageId = languageResult.rows[0].id;
 
-    // Now, query the tourismattraction_localizations and tourismattractions tables using the language_id
+    // 2. Query the tourismattraction_localizations and tourismattractions tables using language_id
     const localizationQuery = `
       SELECT 
+        ta_l.tourism_attraction_id, -- Include tourism_attraction_id in the query
         ta_l.translated_name, 
         ta.brgy, 
         ta.city_mun, 
         ta.prov_huc, 
-        ta.region
-      FROM 
-        tourismattraction_localizations ta_l
-      JOIN 
-        tourismattractions ta 
-      ON 
-        ta_l.tourism_attraction_id = ta.id
-      WHERE 
-        ta_l.language_id = $1
+        ta.region,
+        ta.ta_category
+      FROM tourismattraction_localizations ta_l
+      JOIN tourismattractions ta 
+        ON ta_l.tourism_attraction_id = ta.id
+      WHERE ta_l.language_id = $1
     `;
     const localizationResult = await pool.query(localizationQuery, [languageId]);
 
-    // Format the results into key-value pairs
-    const result = localizationResult.rows.map(row => ({
-      [row.translated_name]: `${row.brgy}, ${row.city_mun}, ${row.prov_huc}, ${row.region}`
+    // 2a. Query the tourismattraction_localizations table for English names (language_id = 1)
+    const englishLocalizationQuery = `
+      SELECT 
+        ta_l.tourism_attraction_id,
+        ta_l.translated_name AS en_name
+      FROM tourismattraction_localizations ta_l
+      WHERE ta_l.language_id = 1
+    `;
+    const englishLocalizationResult = await pool.query(englishLocalizationQuery);
+
+    // 2b. Create a map of tourism_attraction_id to English name
+    const englishNameMap = englishLocalizationResult.rows.reduce((acc, row) => {
+      acc[row.tourism_attraction_id] = row.en_name;
+      return acc;
+    }, {});
+
+    // 2c. Format the tourism attractions into key-value pairs, including the English name
+    const resultatt = localizationResult.rows.map(row => ({
+      [row.translated_name]: `${row.brgy}, ${row.city_mun}, ${row.prov_huc}, ${row.region}`,
+      category: row.ntdp_category,
+      en_name: englishNameMap[row.tourism_attraction_id] || 'N/A' // Use tourism_attraction_id to map English names
     }));
 
-    // Return the formatted results
-    return result;
+    // 3. Query the tourismactivities table for localized activities
+    const localizationQueryAct = `
+      SELECT
+        ta_name,
+        CASE
+          WHEN $1 = 'en' THEN en
+          WHEN $1 = 'ko' THEN ko
+          WHEN $1 = 'zh' THEN zh
+          WHEN $1 = 'ja' THEN ja
+          WHEN $1 = 'es' THEN es
+          WHEN $1 = 'fr' THEN fr
+          WHEN $1 = 'ru' THEN ru
+          WHEN $1 = 'hi' THEN hi
+          ELSE en -- default fallback if code not matched
+        END AS localized_ta_name
+      FROM tourismactivities
+    `;
+    const localizationQueryActResult = await pool.query(localizationQueryAct, [languageCode]);
+
+    // 3a. Format the tourism activities into key-value pairs
+    const resultact = localizationQueryActResult.rows.map(row => ({
+      [row.localized_ta_name]: row.ta_name
+    }));
+
+    // 4. Return array of two objects: [ { act }, { att } ]
+    return [
+      { act: resultact },
+      { att: resultatt }
+    ];
+
   } catch (err) {
     throw err;
   }
 };
+
 export const submitSurveyFeedback = async ({ entity, rating, review, touchpoint, anonid, language }) => {
   const query = `
     INSERT INTO survey_feedback (entity, rating, response_value, touchpoint, anonymous_user_id, surveyquestion_ref, language)

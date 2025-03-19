@@ -770,6 +770,18 @@ export const fetchAllTourismAttractionsService = async () => {
     throw err;
   }
 };
+export const fetchAllTourismActivitiesService = async () => {
+  logger.database("METHOD api/admin/tourismactivities - READ ALL");
+  try {
+    const query = 'SELECT ta_name as name, short_id FROM public.tourismactivities';
+    const result = await pool.query(query);
+    // logger.warn(`ACTIVITIES--> ${JSON.stringify(result.rows)}`);
+    return { Activities: result.rows };
+  } catch (err) {
+    logger.error({ error: err.message });
+    throw err;
+  }
+};
 
 // Function to fetch all establishments
 export const fetchAllEstablishmentsService = async () => {
@@ -788,20 +800,24 @@ export const fetchAllEstablishmentsService = async () => {
 export const fetchAllTouchpointsService = async () => {
   logger.database("METHOD api/admin/locations - FETCH ALL DATA");
   try {
-    const [locations, attractions, establishments] = await Promise.all([
+    const [locations, attractions, establishments, activities] = await Promise.all([
       fetchLocationsServiceFiltered(),
       fetchAllTourismAttractionsService(),
-      fetchAllEstablishmentsService()
+      fetchAllEstablishmentsService(),
+      fetchAllTourismActivitiesService(),
+
     ]);
 
     // Rename the 'Attractions' and 'Establishments' keys to lowercase
     const { Attractions: attractionsData } = attractions;
     const { Establishments: establishmentsData } = establishments;
+    const { Activities: activitiesData } = activities;
 
     return {
       ...locations,
       attractions: attractionsData,
-      establishments: establishmentsData
+      establishments: establishmentsData,
+      activities: activitiesData
     };
   } catch (err) {
     logger.error({ error: err.message });

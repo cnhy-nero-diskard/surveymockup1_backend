@@ -74,7 +74,7 @@ router.get('/api/admin/getEntityMetrics',getSurveyFeedbackController )
 router.get('/api/test', async (req, res) => {
     try {
         // Insert test function here
-        const result = await fetchEntityinSurveyFeedbackService() ;
+        const result = await fetchAllTouchpointsService() ;
         res.json(result);
     } catch (error) {
         console.error('Test endpoint error:', error);

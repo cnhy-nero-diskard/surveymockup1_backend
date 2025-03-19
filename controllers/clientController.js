@@ -161,7 +161,8 @@ export const getTourismAttractionNames = async (req, res, next) => {
 
   try {
     const translatedNames = await getTourismAttractionLocalizations(languageCode);
-    res.json({ translatedNames });
+    
+    res.json(translatedNames);
   } catch (err) {
     logger.error(err.message);
     res.status(500).json({ error: 'Server error' });

@@ -620,3 +620,42 @@ export const fetchEntityinSurveyFeedbackService = async () => {
 
     }
 }
+
+export const getSurveyTally = async () => {
+    const client = await pool.connect();
+    try {
+        // Step 1: Retrieve all surveyresponses_ref from survey_questions
+        const surveyRefsQuery = 'SELECT surveyresponses_ref, title, content FROM survey_questions';
+        const surveyRefsResult = await client.query(surveyRefsQuery);
+        const surveyRefs = surveyRefsResult.rows;
+
+        // Step 2: For each surveyresponses_ref, query survey_responses
+        const results = [];
+        for (const ref of surveyRefs) {
+            const responseQuery = `
+                SELECT surveyquestion_ref, response_value, COUNT(*) AS occurrence
+                FROM survey_responses
+                WHERE surveyquestion_ref = $1
+                GROUP BY surveyquestion_ref, response_value
+            `;
+            const responseResult = await client.query(responseQuery, [ref.surveyresponses_ref]);
+
+            // Step 3: Construct the array object
+            const occurrences = {};
+            responseResult.rows.forEach(row => {
+                occurrences[row.response_value] = row.occurrence;
+            });
+
+            results.push({
+                division: ref.title,
+                question: ref.content,
+                surveyquestion_ref: ref.surveyresponses_ref,
+                occurrences: occurrences
+            });
+        }
+
+        return results;
+    } finally {
+        client.release();
+    }
+};
