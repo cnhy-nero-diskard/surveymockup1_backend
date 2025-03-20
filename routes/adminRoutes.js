@@ -1,6 +1,6 @@
 // routes/adminRoutes.js
 import express from 'express';
-import { getAdminData, getAdminSessionData, updateTourismAttractionController, addTourismAttractionController, deleteTourismAttractionController, posthftokens, gethftokens, analyzeSentiment, analyzeTopics, fetchAnonymousUsersController, logstream, getEstablishmentEnglishNamesController, getOpenEndedSurveyResponses, createLocalization, fetchLocalization, updateLocalization, deleteLocalization, createEstablishment, fetchEstablishments, updateEstablishment, deleteEstablishment, createTourismAttractionController, fetchTourismAttractionController, createSurveyResponseController, fetchSurveyResponsesController, updateSurveyResponseController, deleteSurveyResponseController, fetchSurveyQuestionsController, createSentimentAnalysisController, updateSentimentAnalysisController, fetchSentimentAnalysisController, deleteSentimentAnalysisController, insertTopicDataController, fetchAllTouchpointsController, fetchTranslatedTouchpointController, groupByLikertRatingController, getSurveyMetricsAnalyticsController, getSurveyFeedbackController, getAllByTallyController, getSentimentAnalysisController } from '../controllers/adminController.js';
+import { getAdminData, getAdminSessionData, updateTourismAttractionController, addTourismAttractionController, deleteTourismAttractionController, posthftokens, gethftokens, analyzeSentiment, analyzeTopics, fetchAnonymousUsersController, logstream, getEstablishmentEnglishNamesController, getOpenEndedSurveyResponses, createLocalization, fetchLocalization, updateLocalization, deleteLocalization, createEstablishment, fetchEstablishments, updateEstablishment, deleteEstablishment, createTourismAttractionController, fetchTourismAttractionController, createSurveyResponseController, fetchSurveyResponsesController, updateSurveyResponseController, deleteSurveyResponseController, fetchSurveyQuestionsController, createSentimentAnalysisController, updateSentimentAnalysisController, fetchSentimentAnalysisController, deleteSentimentAnalysisController, insertTopicDataController, fetchAllTouchpointsController, fetchTranslatedTouchpointController, groupByLikertRatingController, getSurveyMetricsAnalyticsController, getSurveyFeedbackController, getAllByTallyController, getSentimentAnalysisController, getSurveyByTopicController } from '../controllers/adminController.js';
 import { authenticate, authorizeAdmin } from '../middleware/authMiddleware.js';
 import { submitSurveyResponseController } from '../controllers/surveyController.js';
 import { validateSurveyResponse } from '../middleware/validationMiddleware.js';
@@ -9,7 +9,7 @@ import { getEstablishmentEnglishNames, purgeAnonymousUsers } from '../services/a
 import { getMetrics } from '../metrics/metricsController.js';
 import { fetchAllTouchpointsService, fetchAllTourismAttractionsService, fetchLocationsService, fetchLocationsServiceFiltered, fetchTranslatedTouchpointService, insertTopicDataService } from '../services/adminCRUD.js';
 import logger from "../middleware/logger.js";
-import { calculateAverageCompletionTimeService, fetchByCountryResidence, fetchByGender, fetchAllFinishedRows, fetchAndGroupFinishedSurveyResponsesByMonthService, fetchByNationality, fetchByTimeOfDay, fetchTouchpointsService, fetchUnfinishedSurveys, fetchEntityinSurveyFeedbackService, getAllSurveyTally, getSentimentAnalysis } from '../services/analyticsCRUD.js';
+import { calculateAverageCompletionTimeService, fetchByCountryResidence, fetchByGender, fetchAllFinishedRows, fetchAndGroupFinishedSurveyResponsesByMonthService, fetchByNationality, fetchByTimeOfDay, fetchTouchpointsService, fetchUnfinishedSurveys, fetchEntityinSurveyFeedbackService, getAllSurveyTally, getSentimentAnalysis, getSurveyResponseByTopic } from '../services/analyticsCRUD.js';
 
 const router = express.Router();
 router.get('/api/admin/data', authenticate, getAdminData);
@@ -70,12 +70,15 @@ router.get('/api/admin/getsurveymetrics', getSurveyMetricsAnalyticsController);
 router.get('/api/admin/getEntityMetrics',getSurveyFeedbackController )
 router.get('/api/admin/getAllByTally', getAllByTallyController);
 router.get('/api/admin/getsentimenttable', getSentimentAnalysisController);
+router.get('/api/admin/surveytopics', getSurveyByTopicController);
+
+
 //TESTING ENDPOINT
 router.get('/api/test', async (req, res) => {
     try {
         // Insert test function here
-        const result = await  getSentimentAnalysis() ;
-        res.json(result);
+        const result = await  getSurveyResponseByTopic() ;
+        res.status(200).json(result);
     } catch (error) {
         console.error('Test endpoint error:', error);
         res.status(500).json({ debugError: `TEST HAS ENCOUNTERED A BUG: << ${error} >>` });
