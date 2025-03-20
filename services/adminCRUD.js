@@ -569,23 +569,37 @@ export const createSentimentAnalysisService = async (results) => {
     const placeholders = [];
     const values = [];
 
-    results.forEach(({ user_id, review_date, rating, sqref, sentiment, confidence }, index) => {
-      const startIdx = index * 6;
+    results.forEach(({ response_id, user_id, review_date, rating, sqref, sentiment, confidence }, index) => {
+      const startIdx = index * 7; // Adjusted for 7 fields including response_id
       placeholders.push(
-        `($${startIdx + 1}, $${startIdx + 2}, $${startIdx + 3}, $${startIdx + 4}, $${startIdx + 5}, $${startIdx + 6})`
+        `($${startIdx + 1}, $${startIdx + 2}, $${startIdx + 3}, $${startIdx + 4}, $${startIdx + 5}, $${startIdx + 6}, $${startIdx + 7})`
       );
-      values.push(user_id, review_date, rating, sqref, sentiment, confidence);
+      values.push(response_id, user_id, review_date, rating, sqref, sentiment, confidence);
     });
 
     // Build the SQL query for bulk insertion
     const query = `
-      INSERT INTO public.sentiment_analysis (user_id, review_date, rating, sqref, sentiment, confidence)
+      INSERT INTO public.sentiment_analysis (response_id, user_id, review_date, rating, sqref, sentiment, confidence)
       VALUES ${placeholders.join(', ')}
       RETURNING *;
     `;
 
     // Execute the query and return the inserted rows
     const result = await pool.query(query, values);
+
+    // Update the is_analyzed field in the survey_feedback table for each response_id
+    const updatePromises = results.map(async ({ response_id }) => {
+      const updateQuery = `
+        UPDATE public.survey_feedback
+        SET is_analyzed = TRUE
+        WHERE response_id = $1;
+      `;
+      await pool.query(updateQuery, [response_id]);
+    });
+
+    // Wait for all update queries to complete
+    await Promise.all(updatePromises);
+
     return result.rows;
   } catch (err) {
     // Log any errors that occur
@@ -593,7 +607,6 @@ export const createSentimentAnalysisService = async (results) => {
     throw err;
   }
 };
-
 // Function to fetch sentiment analysis entries based on optional filters
 export const fetchSentimentAnalysisService = async (filters = {}) => {
   logger.database("METHOD api/admin/sentiment_analysis - READ");
@@ -829,6 +842,7 @@ export const fetchAllTouchpointsService = async () => {
 export const fetchTranslatedTouchpointService = async (entityName, languageCode) => {
   logger.database("METHOD api/admin/tourismattractions - FETCH TRANSLATION");
 
+  logger.warn(`entityName: ${entityName}, languageCode: ${languageCode}`);
   try {
     // Attempt the tourismattractions/tourismattraction_localizations query
     const query = `
@@ -873,14 +887,38 @@ export const fetchTranslatedTouchpointService = async (entityName, languageCode)
     const valuesEst = [entityName];
     const resultEst = await pool.query(queryEstablishments, valuesEst);
 
-    // Return the translation if found, otherwise null
-    return resultEst.rows.length > 0 ? resultEst.rows[0].translation : null;
+    // Return the translation if found, otherwise proceed to check locations
+    if (resultEst.rows.length > 0) {
+      return resultEst.rows[0].translation;
+    } else {
+      logger.database(
+        `No record found in establishments for entityName: ${entityName}, languageCode: ${languageCode}. Checking locations next.`
+      );
+    }
+  } catch (err) {
+    logger.error({ error: err.message });
+    logger.database(
+      `Error in establishments query for entityName: ${entityName}, languageCode: ${languageCode}. Checking locations next.`
+    );
+  }
+
+  // Fallback: query the locations table using the short_id
+  try {
+    const queryLocations = `
+      SELECT name
+      FROM public.locations
+      WHERE short_id = $1
+    `;
+    const valuesLoc = [entityName];
+    const resultLoc = await pool.query(queryLocations, valuesLoc);
+
+    // Return the name if found, otherwise null
+    return resultLoc.rows.length > 0 ? resultLoc.rows[0].name : null;
   } catch (err) {
     logger.error({ error: err.message });
     throw err;
   }
 };
-
 // // Function to fetch duplicate establishment names
 // export const fetchDuplicateEstablishmentsService = async () => {
 //   logger.database("METHOD api/admin/establishments - FETCH DUPLICATES");

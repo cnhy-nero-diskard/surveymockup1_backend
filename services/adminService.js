@@ -101,7 +101,7 @@ export const fetchOpenEndedSurveyResponses = async () => {
 
     // Second query for survey feedback responses
     const surveyFeedbackQuery = `
-      SELECT sf.response_id, sf.anonymous_user_id, sf.surveyquestion_ref, sf.created_at AS created_at, sf.response_value, sf.touchpoint, sf.entity 
+      SELECT sf.response_id, sf.is_analyzed, sf.anonymous_user_id, sf.surveyquestion_ref, sf.created_at AS created_at, sf.response_value, sf.touchpoint, sf.entity 
       FROM survey_feedback sf;
     `;
 
