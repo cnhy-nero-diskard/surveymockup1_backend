@@ -91,28 +91,56 @@ export const getEstablishmentEnglishNames = async () => {
 
 export const fetchOpenEndedSurveyResponses = async () => {
   try {
-    // First query for open-ended survey responses
-    // const surveyResponseQuery = `
-    //   SELECT sr.response_id, sr.anonymous_user_id, sr.surveyquestion_ref, sr.created_at, sr.response_value
-    //   FROM survey_responses sr
-    //   JOIN survey_questions sq ON sr.surveyquestion_ref = sq.surveyresponses_ref
-    //   WHERE sq.questiontype = 'OPENENDED';
-    // `;
-
-    // Second query for survey feedback responses
+    // Query for survey feedback responses
     const surveyFeedbackQuery = `
       SELECT sf.response_id, sf.is_analyzed, sf.anonymous_user_id, sf.surveyquestion_ref, sf.created_at AS created_at, sf.response_value, sf.touchpoint, sf.entity 
       FROM survey_feedback sf;
     `;
 
-    // Execute both queries
-    // const surveyResponseResult = await pool.query(surveyResponseQuery);
+    // Execute the query
     const surveyFeedbackResult = await pool.query(surveyFeedbackQuery);
 
-    // Combine the results
-    const combinedResults = [
-      ...surveyFeedbackResult.rows
-    ];
+    // Function to fetch name based on entity (short_id)
+    const fetchNameByEntity = async (entity) => {
+      // Check in establishments table
+      const estQuery = `
+        SELECT est_name AS name FROM establishments WHERE short_id = $1;
+      `;
+      const estResult = await pool.query(estQuery, [entity]);
+      if (estResult.rows.length > 0) return estResult.rows[0].name;
+
+      // Check in tourismattractions table
+      const taQuery = `
+        SELECT ta_name AS name FROM tourismattractions WHERE short_id = $1;
+      `;
+      const taResult = await pool.query(taQuery, [entity]);
+      if (taResult.rows.length > 0) return taResult.rows[0].name;
+
+      // Check in tourismactivities table
+      const tacQuery = `
+        SELECT ta_name AS name FROM tourismactivities WHERE short_id = $1;
+      `;
+      const tacResult = await pool.query(tacQuery, [entity]);
+      if (tacResult.rows.length > 0) return tacResult.rows[0].name;
+
+      // Check in locations table
+      const locQuery = `
+        SELECT name FROM locations WHERE short_id = $1;
+      `;
+      const locResult = await pool.query(locQuery, [entity]);
+      if (locResult.rows.length > 0) return locResult.rows[0].name;
+
+      // If no match is found, return null
+      return null;
+    };
+
+    // Add the 'name' key to each response
+    const combinedResults = await Promise.all(
+      surveyFeedbackResult.rows.map(async (row) => {
+        const name = await fetchNameByEntity(row.entity);
+        return { ...row, name };
+      })
+    );
 
     logger.warn(`OPEN-ENDED SURVEY RESPONSES AND FEEDBACK: ${combinedResults.length}`);
     return combinedResults;

@@ -498,30 +498,31 @@ export const fetchEntityinSurveyFeedbackService = async () => {
     try {
         // Query to group by entity (short_id) and count ratings, languages, and touchpoints
         const feedbackQuery = `
-            SELECT
-                sf.entity,
-                sf.touchpoint,
-                COUNT(*) AS total_responses,
-                SUM(CASE WHEN sf.rating = '1' THEN 1 ELSE 0 END) AS rating_1,
-                SUM(CASE WHEN sf.rating = '2' THEN 1 ELSE 0 END) AS rating_2,
-                SUM(CASE WHEN sf.rating = '3' THEN 1 ELSE 0 END) AS rating_3,
-                SUM(CASE WHEN sf.rating = '4' THEN 1 ELSE 0 END) AS rating_4,
-                jsonb_object_agg(sf.language, language_count) AS language_counts
-            FROM (
-                SELECT
-                    entity,
-                    touchpoint,
-                    rating,
-                    language,
-                    COUNT(*) AS language_count
-                FROM
-                    public.survey_feedback
-                GROUP BY
-                    entity, touchpoint, rating, language
-            ) AS sf
-            GROUP BY
-                sf.entity, sf.touchpoint;
-        `;
+
+        SELECT
+        sf.entity,
+        sf.touchpoint,
+        SUM(sf.language_count) AS total_responses,
+        SUM(CASE WHEN sf.rating = '1' THEN sf.language_count ELSE 0 END) AS rating_1,
+        SUM(CASE WHEN sf.rating = '2' THEN sf.language_count ELSE 0 END) AS rating_2,
+        SUM(CASE WHEN sf.rating = '3' THEN sf.language_count ELSE 0 END) AS rating_3,
+        SUM(CASE WHEN sf.rating = '4' THEN sf.language_count ELSE 0 END) AS rating_4,
+        jsonb_object_agg(sf.language, sf.language_count) AS language_counts
+        FROM (
+        SELECT
+            entity,
+            touchpoint,
+            rating,
+            language,
+            COUNT(*) AS language_count
+        FROM
+            public.survey_feedback
+        GROUP BY
+            entity, touchpoint, rating, language
+    ) AS sf
+    GROUP BY
+        sf.entity, sf.touchpoint;
+            `;
 
         const feedbackResult = await pool.query(feedbackQuery);
 
@@ -659,3 +660,69 @@ export const getAllSurveyTally = async () => {
         client.release();
     }
 };
+export const getSentimentAnalysis = async () => {
+
+    const client = await pool.connect();
+  
+    try {
+      // Count the positive, neutral, and negative rows
+      const countQuery = `
+        SELECT sentiment, COUNT(*) 
+        FROM sentiment_analysis 
+        GROUP BY sentiment;
+      `;
+  
+      const countResult = await client.query(countQuery);
+  
+      // Extract counts
+      const counts = {
+        positive: 0,
+        neutral: 0,
+        negative: 0,
+      };
+  
+      countResult.rows.forEach(row => {
+        counts[row.sentiment] = row.count;
+      });
+  
+      // Fetch response_values for each sentiment
+      const positiveQuery = `
+        SELECT sf.response_value 
+        FROM survey_feedback sf
+        JOIN sentiment_analysis sa ON sf.response_id = sa.response_id
+        WHERE sa.sentiment = 'positive';
+      `;
+  
+      const neutralQuery = `
+        SELECT sf.response_value 
+        FROM survey_feedback sf
+        JOIN sentiment_analysis sa ON sf.response_id = sa.response_id
+        WHERE sa.sentiment = 'neutral';
+      `;
+  
+      const negativeQuery = `
+        SELECT sf.response_value 
+        FROM survey_feedback sf
+        JOIN sentiment_analysis sa ON sf.response_id = sa.response_id
+        WHERE sa.sentiment = 'negative';
+      `;
+  
+      const [positiveResult, neutralResult, negativeResult] = await Promise.all([
+        client.query(positiveQuery),
+        client.query(neutralQuery),
+        client.query(negativeQuery),
+      ]);
+  
+      // Prepare the final result
+      const result = {
+        counts,
+        positive: positiveResult.rows.map(row => row.response_value),
+        neutral: neutralResult.rows.map(row => row.response_value),
+        negative: negativeResult.rows.map(row => row.response_value),
+      };
+  
+      return result;
+    } finally {
+      client.release();
+    }
+  }

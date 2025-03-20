@@ -690,17 +690,17 @@ export const insertTopicDataService = async (data) => {
   try {
 
     for (const item of [data]) {
-      const { topic, probability, top_words, customLabel, contribution, startDate, endDate } = item;
+      const { topic, probability, top_words, customLabel, contribution, startDate, endDate,customFilter } = item;
       // Convert startDate and endDate to proper timestamp format
       const formattedStartDate = new Date(startDate).toISOString();
       const formattedEndDate = new Date(endDate).toISOString();
       // Insert into topics table
       const topicQuery = `
-        INSERT INTO tm_topics (topic_id, probability, custom_label, startdate, enddate)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO tm_topics (topic_id, probability, custom_label, startdate, enddate, "customFilter")
+        VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING id;
       `;
-      const topicValues = [topic, probability, customLabel, formattedStartDate, formattedEndDate];
+      const topicValues = [topic, probability, customLabel, formattedStartDate, formattedEndDate, customFilter[0]];
       const topicResult = await pool.query(topicQuery, topicValues);
       const topicId = topicResult.rows[0].id;
       logger.database(`topic id --> ${topicId}`);
@@ -882,7 +882,7 @@ export const fetchTranslatedTouchpointService = async (entityName, languageCode)
     const queryEstablishments = `
       SELECT ${columnName} AS translation
       FROM public.establishments
-      WHERE est_name = $1
+      WHERE short_id = $1
     `;
     const valuesEst = [entityName];
     const resultEst = await pool.query(queryEstablishments, valuesEst);

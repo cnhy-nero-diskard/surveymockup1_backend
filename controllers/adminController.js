@@ -9,7 +9,7 @@ import { logEmitter } from '../middleware/logger.js';
 import dotenv from 'dotenv';
 import { response } from 'express';
 import { createEstablishmentService, createLocalizationService, createSentimentAnalysisService, createTourismAttractionService, deleteEstablishmentService, deleteLocalizationService, deleteSentimentAnalysisService, deleteSurveyResponseService, deleteTourismAttractionService, fetchAllTouchpointsService, fetchEstablishmentsService, fetchLocalizationsService, fetchSentimentAnalysisService, fetchSurveyResponsesService, fetchTourismAttractionsService, fetchTranslatedTouchpointService, insertTopicDataService, updateEstablishmentService, updateLocalizationService, updateSentimentAnalysisService, updateSurveyResponseService, updateTourismAttractionService } from '../services/adminCRUD.js';
-import { calculateAverageCompletionTimeService, fetchAllFinishedRows, fetchAndGroupFinishedSurveyResponsesByMonthService, fetchByAgeGroup, fetchByCountryResidence, fetchByGender, fetchByNationality, fetchByTimeOfDay, fetchEntityinSurveyFeedbackService, fetchTouchpointsService, fetchUnfinishedSurveys, getAllSurveyTally, groupByLikertRatingService } from '../services/analyticsCRUD.js';
+import { calculateAverageCompletionTimeService, fetchAllFinishedRows, fetchAndGroupFinishedSurveyResponsesByMonthService, fetchByAgeGroup, fetchByCountryResidence, fetchByGender, fetchByNationality, fetchByTimeOfDay, fetchEntityinSurveyFeedbackService, fetchTouchpointsService, fetchUnfinishedSurveys, getAllSurveyTally, getSentimentAnalysis, groupByLikertRatingService } from '../services/analyticsCRUD.js';
 dotenv.config();
 
 export const getAdminData = async (req, res, next) => {
@@ -797,5 +797,17 @@ export const getAllByTallyController = async (req, res) => {
   } catch (error) {
       console.error('Error in surveyResponsesController:', error);
       res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+export const getSentimentAnalysisController = async (req, res) => {
+  try {
+    // Call the service function to get sentiment analysis data
+    const sentimentAnalysisData = await getSentimentAnalysis();
+
+    // Send the response as JSON
+    res.status(200).json(sentimentAnalysisData);
+  } catch (error) {
+    // Handle errors and send an appropriate response
+    res.status(500).json({ error: error.message });
   }
 };
