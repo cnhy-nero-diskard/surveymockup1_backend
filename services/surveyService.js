@@ -18,17 +18,20 @@ export const submitSurveyResponse = async (response, anonymousUserId) => {
         const logtext = ` METHOD submit survey responses --> database`;
         logger.database(logtext);
         const query = `
-        INSERT INTO survey_responses (
-            anonymous_user_id, 
-            surveyquestion_ref, 
-            response_value,
-            touchpoint
-        )
-        VALUES ($1, $2, $3, $4)
-        ON CONFLICT (anonymous_user_id, surveyquestion_ref)
-        DO UPDATE SET 
-            response_value = EXCLUDED.response_value
-        RETURNING *;
+    INSERT INTO survey_responses (
+        anonymous_user_id, 
+        surveyquestion_ref, 
+        response_value,
+        touchpoint
+    )
+    VALUES ($1, $2, $3, $4)
+    ON CONFLICT (anonymous_user_id, surveyquestion_ref)
+    DO UPDATE SET 
+        response_value = EXCLUDED.response_value,
+        touchpoint = EXCLUDED.touchpoint,
+        created_at = EXCLUDED.created_at,
+        is_analyzed = EXCLUDED.is_analyzed
+    RETURNING *;
     `;
 
         const values = [

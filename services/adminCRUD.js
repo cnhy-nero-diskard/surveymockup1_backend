@@ -852,7 +852,7 @@ export const fetchTranslatedTouchpointService = async (entityName, languageCode)
         ON ta.id = tl.tourism_attraction_id
       JOIN public.languages l 
         ON l.id = tl.language_id
-      WHERE ta.ta_name = $1 
+      WHERE ta.short_id = $1 
         AND l.code = $2
     `;
     const values = [entityName, languageCode];

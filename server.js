@@ -52,7 +52,7 @@ app.use(
     saveUninitialized: false,
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 1 day
-      secure: process.env.NODE_ENV === 'production', // Set to true if using HTTPS
+      secure: true // Set to true if using HTTPS
     },
   })
 );
@@ -75,8 +75,8 @@ app.use(helmet());
 
 //rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  windowMs: 3 * 60 * 1000, // 3 minutes
+  max: 10000 // limit each IP to 100 requests per windowMs
 });
 
 app.use(limiter);

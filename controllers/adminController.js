@@ -9,7 +9,7 @@ import { logEmitter } from '../middleware/logger.js';
 import dotenv from 'dotenv';
 import { response } from 'express';
 import { createEstablishmentService, createLocalizationService, createSentimentAnalysisService, createTourismAttractionService, deleteEstablishmentService, deleteLocalizationService, deleteSentimentAnalysisService, deleteSurveyResponseService, deleteTourismAttractionService, fetchAllTouchpointsService, fetchEstablishmentsService, fetchLocalizationsService, fetchSentimentAnalysisService, fetchSurveyResponsesService, fetchTourismAttractionsService, fetchTranslatedTouchpointService, insertTopicDataService, updateEstablishmentService, updateLocalizationService, updateSentimentAnalysisService, updateSurveyResponseService, updateTourismAttractionService } from '../services/adminCRUD.js';
-import { calculateAverageCompletionTimeService, fetchAllFinishedRows, fetchAndGroupFinishedSurveyResponsesByMonthService, fetchByAgeGroup, fetchByCountryResidence, fetchByGender, fetchByNationality, fetchByTimeOfDay, fetchEntityinSurveyFeedbackService, fetchTouchpointsService, fetchUnfinishedSurveys, getAllSurveyTally, getSentimentAnalysis, getSurveyResponseByTopic, groupByLikertRatingService } from '../services/analyticsCRUD.js';
+import { calculateAverageCompletionTimeService, fetchAllFinishedRows, fetchAndGroupFinishedSurveyResponsesByMonthService, fetchByAgeGroup, fetchByCountryResidence, fetchByGender, fetchByNationality, fetchByTimeOfDay, fetchEntityinSurveyFeedbackService, fetchTouchpointsService, fetchUnfinishedSurveys, getAllSurveyTally, getSentimentAnalysis, getSentimentLocation, getSurveyResponseByTopic, groupByLikertRatingService } from '../services/analyticsCRUD.js';
 dotenv.config();
 
 export const getAdminData = async (req, res, next) => {
@@ -662,7 +662,7 @@ export const fetchAllTouchpointsController = async (req, res, next) => {
 };
 
 export const fetchTranslatedTouchpointController = async (req, res, next) => {
-  logger.info("GET /api/admin/tourismattractions/translate");
+  logger.info("POST /api/admin/tourismattractions/translate");
   logger.warn(`BODY OF REQ --> ${JSON.stringify(req.body)}`);
   try {
     const { entityname, languagecode } = req.body;
@@ -811,7 +811,19 @@ export const getSentimentAnalysisController = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
+export const getSentimentLocationController = async (req, res) => {
+  try {
+    const { short_id } = req.body;
+    // Call the service function to get sentiment analysis data
+    const sentimentAnalysisData = await getSentimentLocation(short_id);
+    logger.warn(`ENTITY SHORT_ID --> ${short_id}`);
+    // Send the response as JSON
+    res.status(200).json(sentimentAnalysisData);
+  } catch (error) {
+    // Handle errors and send an appropriate response
+    res.status(500).json({ error: error.message });
+  }
+};
 export const getSurveyByTopicController = async (req, res) => {
   try {
     // Call the service function to get the survey stats

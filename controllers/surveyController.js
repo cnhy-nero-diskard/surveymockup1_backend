@@ -43,7 +43,7 @@ export const submitSurveyResponseController = async (req, res, next) => {
         // Wait for all responses to be processed
         await Promise.all(responses);
 
-        res.status(201).send("OK");
+        res.send("OK");
 
     } catch (err) {
         logger.error("[ERROR UPON SUBMISSION OF DATA]", err);

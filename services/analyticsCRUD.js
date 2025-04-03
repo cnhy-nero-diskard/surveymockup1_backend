@@ -268,7 +268,7 @@ export const fetchAllFinishedRows = async () => {
         const query = `
       SELECT COUNT(*) as Finished
       FROM survey_responses 
-      WHERE surveyquestion_ref = 'FINISH';`
+      WHERE surveyquestion_ref = 'FINISH' ;`
         const result = await pool.query(query);
         return result.rows[0];
 
@@ -305,29 +305,43 @@ export const fetchUnfinishedSurveys = async () => {
 export const fetchTouchpointsService = async () => {
     const restructureData = (data) => {
         return data.reduce((acc, item) => {
-            const { touchpoint, total_unique_user_count } = item;
-            acc[touchpoint] = parseInt(total_unique_user_count);
+            const { touchpoint, total_count } = item;
+            // Check if the touchpoint is not null before adding it to the accumulator
+            if (touchpoint !== null) {
+                acc[touchpoint] = parseInt(total_count);
+            }
             return acc;
         }, {});
     };
 
     logger.database("METHOD COUNT TOUCHPOINTS");
     try {
-        const query = `SELECT
-        COALESCE(sr.touchpoint, sf.touchpoint) AS touchpoint,
-        COALESCE(sr.unique_user_count, 0) + COALESCE(sf.unique_user_count, 0) AS total_unique_user_count
-        FROM
-        (SELECT touchpoint, COUNT(DISTINCT anonymous_user_id) AS unique_user_count FROM public.survey_responses GROUP BY touchpoint) AS sr
-        FULL OUTER JOIN
-        (SELECT touchpoint, COUNT(DISTINCT anonymous_user_id) AS unique_user_count FROM public.survey_feedback GROUP BY touchpoint) AS sf ON sr.touchpoint = sf.touchpoint;`
+        const query = `
+        
+SELECT
+    COALESCE(sr.touchpoint, sf.touchpoint) AS touchpoint,
+    COALESCE(sr.total_count, 0) + COALESCE(sf.total_count, 0) AS total_count
+FROM
+    (SELECT touchpoint, COUNT(*) AS total_count 
+     FROM public.survey_responses 
+     WHERE surveyquestion_ref = 'LANGPERF' 
+     GROUP BY touchpoint) AS sr
+FULL OUTER JOIN
+    (SELECT touchpoint, COUNT(*) AS total_count 
+     FROM public.survey_feedback 
+     GROUP BY touchpoint) AS sf ON sr.touchpoint = sf.touchpoint
+WHERE
+    COALESCE(sr.touchpoint, sf.touchpoint) IS NOT NULL;
+`;
         const result = await pool.query(query);
-        const clresult = restructureData(result.rows)
+        const clresult = restructureData(result.rows);
+        logger.warn(`RESULT RAW: ${JSON.stringify(result.rows)}`);
+        logger.warn(`RESULT CL: ${JSON.stringify(clresult)}`);
 
         return clresult;
     } catch (error) {
-        logger.error({ error: err.message });
-        throw err;
-
+        logger.error({ error: error.message });
+        throw error;
     }
 }
 
@@ -595,6 +609,7 @@ export const fetchEntityinSurveyFeedbackService = async () => {
                 location_type: row.location_type,
                 barangay: row.barangay,
                 city_mun: row.city_mun,
+                short_id: row.short_id,
                 ta_category: row.ta_category,
                 ntdp_category: row.ntdp_category
             };
@@ -635,6 +650,7 @@ export const fetchEntityinSurveyFeedbackService = async () => {
                 entity: entityDetails.name || row.entity, // Fallback to short_id if name not found
                 touchpoint: row.touchpoint,
                 total_responses: row.total_responses,
+                short_id: entityDetails.short_id,
                 rating: {
                     Dissatisfied: row.rating_1,
                     Neutral: row.rating_2,
@@ -766,6 +782,74 @@ export const getSentimentAnalysis = async () => {
     }
 };
 
+export const getSentimentLocation = async (filter) => {
+    const client = await pool.connect();
+
+    try {
+        // Base query for sentiment counts with entity filter
+        const countQuery = `
+            SELECT sa.sentiment, COUNT(*) 
+            FROM sentiment_analysis sa
+            JOIN survey_feedback sf ON sa.response_id = sf.response_id
+            WHERE sf.entity = $1
+            GROUP BY sa.sentiment;
+        `;
+
+        const countResult = await client.query(countQuery, [filter]);
+
+        // Extract counts
+        const counts = {
+            positive: 0,
+            neutral: 0,
+            negative: 0,
+        };
+
+        countResult.rows.forEach(row => {
+            counts[row.sentiment] = parseInt(row.count, 10);
+        });
+
+        // Fetch response_values for each sentiment with entity filter
+        const positiveQuery = `
+            SELECT sf.response_value 
+            FROM survey_feedback sf
+            JOIN sentiment_analysis sa ON sf.response_id = sa.response_id
+            WHERE sa.sentiment = 'positive' AND sf.entity = $1;
+        `;
+
+        const neutralQuery = `
+            SELECT sf.response_value 
+            FROM survey_feedback sf
+            JOIN sentiment_analysis sa ON sf.response_id = sa.response_id
+            WHERE sa.sentiment = 'neutral' AND sf.entity = $1;
+        `;
+
+        const negativeQuery = `
+            SELECT sf.response_value 
+            FROM survey_feedback sf
+            JOIN sentiment_analysis sa ON sf.response_id = sa.response_id
+            WHERE sa.sentiment = 'negative' AND sf.entity = $1;
+        `;
+
+        // Execute queries with filter
+        const [positiveResult, neutralResult, negativeResult] = await Promise.all([
+            client.query(positiveQuery, [filter]),
+            client.query(neutralQuery, [filter]),
+            client.query(negativeQuery, [filter]),
+        ]);
+
+        // Prepare the final result
+        const result = {
+            counts,
+            positive: positiveResult.rows.map(row => row.response_value),
+            neutral: neutralResult.rows.map(row => row.response_value),
+            negative: negativeResult.rows.map(row => row.response_value),
+        };
+
+        return result;
+    } finally {
+        client.release();
+    }
+};
 export const getSurveyResponseByTopic = async () => {
     try {
         // Step 1: Fetch data from the database, excluding rows with blank response_value
