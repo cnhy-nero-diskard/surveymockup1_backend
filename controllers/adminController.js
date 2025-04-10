@@ -8,7 +8,7 @@ import { queryHuggingFace } from '../services/huggingFaceService.js';
 import { logEmitter } from '../middleware/logger.js';
 import dotenv from 'dotenv';
 import { response } from 'express';
-import { createEstablishmentService, createLocalizationService, createSentimentAnalysisService, createTourismAttractionService, deleteEstablishmentService, deleteLocalizationService, deleteSentimentAnalysisService, deleteSurveyResponseService, deleteTourismAttractionService, fetchAllTouchpointsService, fetchEstablishmentsService, fetchLocalizationsService, fetchSentimentAnalysisService, fetchSurveyResponsesService, fetchTourismAttractionsService, fetchTranslatedTouchpointService, insertTopicDataService, updateEstablishmentService, updateLocalizationService, updateSentimentAnalysisService, updateSurveyResponseService, updateTourismAttractionService } from '../services/adminCRUD.js';
+import { createEstablishmentService, createLocalizationService, createSentimentAnalysisService, createSurveyFeedbackService, createTourismAttractionService, deleteEstablishmentService, deleteLocalizationService, deleteSentimentAnalysisService, deleteSurveyFeedbackService, deleteSurveyResponseService, deleteTourismAttractionService, fetchAllTouchpointsService, fetchEstablishmentsService, fetchLocalizationsService, fetchSentimentAnalysisService, fetchSurveyFeedbackService, fetchSurveyResponsesService, fetchTourismAttractionsService, fetchTranslatedTouchpointService, insertTopicDataService, updateEstablishmentService, updateLocalizationService, updateSentimentAnalysisService, updateSurveyFeedbackService, updateSurveyResponseService, updateTourismAttractionService } from '../services/adminCRUD.js';
 import { calculateAverageCompletionTimeService, fetchAllFinishedRows, fetchAndGroupFinishedSurveyResponsesByMonthService, fetchByAgeGroup, fetchByCountryResidence, fetchByGender, fetchByNationality, fetchByTimeOfDay, fetchEntityinSurveyFeedbackService, fetchTouchpointsService, fetchUnfinishedSurveys, getAllSurveyTally, getSentimentAnalysis, getSentimentLocation, getSurveyResponseByTopic, groupByLikertRatingService } from '../services/analyticsCRUD.js';
 dotenv.config();
 
@@ -839,5 +839,84 @@ export const getSurveyByTopicController = async (req, res) => {
       error: 'Internal Server Error',
       message: error.message || 'Something went wrong while fetching survey stats.',
     });
+  }
+};
+
+
+export const createSurveyFeedbackController = async (req, res, next) => {
+  logger.info("POST /api/admin/survey_feedback");
+  try {
+    const feedbackData = req.body;
+
+    const requiredFields = [
+      "entity",
+      "rating",
+      "response_value",
+      "touchpoint",
+      "anonymous_user_id",
+      "surveyquestion_ref",
+      "language",
+      "relevance",
+    ];
+
+    const missingFields = requiredFields.filter((field) => !feedbackData[field]);
+
+    if (missingFields.length > 0) {
+      return res.status(400).json({ error: `Missing required fields: ${missingFields.join(", ")}` });
+    }
+
+    const result = await createSurveyFeedbackService(feedbackData);
+    res.status(201).json(result);
+  } catch (err) {
+    next(`ERROR ON CREATING SURVEY FEEDBACK: ${err}`);
+  }
+};
+
+export const fetchSurveyFeedbackController = async (req, res, next) => {
+  logger.info("GET /api/admin/survey_feedback");
+  try {
+    const filters = {
+      anonymous_user_id: req.query.anonymous_user_id,
+      entity: req.query.entity,
+      touchpoint: req.query.touchpoint,
+      is_analyzed: req.query.is_analyzed,
+    };
+
+    const feedback = await fetchSurveyFeedbackService(filters);
+    res.json(feedback);
+  } catch (err) {
+    next(`ERROR ON FETCHING SURVEY FEEDBACK: ${err}`);
+  }
+};
+
+export const updateSurveyFeedbackController = async (req, res, next) => {
+  logger.info("PUT /api/admin/survey_feedback");
+  try {
+    const { id: response_id, ...updateData } = req.params;
+
+    if (!response_id) {
+      return res.status(400).json({ error: "Missing required field: response_id" });
+    }
+
+    const result = await updateSurveyFeedbackService(response_id, updateData);
+    res.json({ message: `Survey feedback ${response_id} updated successfully`, feedback: result });
+  } catch (err) {
+    next(`ERROR ON UPDATING SURVEY FEEDBACK: ${err}`);
+  }
+};
+
+export const deleteSurveyFeedbackController = async (req, res, next) => {
+  logger.info("DELETE /api/admin/survey_feedback");
+  try {
+    const { response_id } = req.body;
+
+    if (!response_id) {
+      return res.status(400).json({ error: "Missing required field: response_id" });
+    }
+
+    const result = await deleteSurveyFeedbackService(response_id);
+    res.json({ message: `Survey feedback ${response_id} deleted successfully`, feedback: result });
+  } catch (err) {
+    next(`ERROR ON DELETING SURVEY FEEDBACK: ${err}`);
   }
 };

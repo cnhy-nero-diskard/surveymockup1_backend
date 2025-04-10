@@ -919,6 +919,156 @@ export const fetchTranslatedTouchpointService = async (entityName, languageCode)
     throw err;
   }
 };
+
+
+
+
+
+// CRUD operations for survey_feedback table
+
+// Function to create a new survey feedback entry
+export const createSurveyFeedbackService = async (feedbackData) => {
+  logger.database("METHOD api/admin/survey_feedback - CREATE");
+  try {
+    const {
+      entity,
+      rating,
+      response_value,
+      touchpoint,
+      anonymous_user_id,
+      surveyquestion_ref,
+      language,
+      relevance,
+    } = feedbackData;
+
+    const query = `
+      INSERT INTO public.survey_feedback (
+        entity, rating, response_value, touchpoint, anonymous_user_id,
+        surveyquestion_ref, language, relevance
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING *;
+    `;
+    const values = [
+      entity,
+      rating,
+      response_value,
+      touchpoint,
+      anonymous_user_id,
+      surveyquestion_ref,
+      language,
+      relevance,
+    ];
+    const result = await pool.query(query, values);
+    return result.rows[0];
+  } catch (err) {
+    logger.error({ error: err.message });
+    throw err;
+  }
+};
+
+// Function to fetch survey feedback entries with optional filters
+export const fetchSurveyFeedbackService = async (filters = {}) => {
+  logger.database("METHOD api/admin/survey_feedback - READ");
+  try {
+    let query = `SELECT * FROM public.survey_feedback`;
+    const values = [];
+    const conditions = [];
+
+    if (filters.anonymous_user_id) {
+      conditions.push(`anonymous_user_id = $${values.length + 1}`);
+      values.push(filters.anonymous_user_id);
+    }
+    if (filters.entity) {
+      conditions.push(`entity ILIKE $${values.length + 1}`);
+      values.push(`%${filters.entity}%`);
+    }
+    if (filters.touchpoint) {
+      conditions.push(`touchpoint = $${values.length + 1}`);
+      values.push(filters.touchpoint);
+    }
+    if (filters.is_analyzed !== undefined) {
+      conditions.push(`is_analyzed = $${values.length + 1}`);
+      values.push(filters.is_analyzed);
+    }
+
+    if (conditions.length > 0) {
+      query += ` WHERE ${conditions.join(" AND ")}`;
+    }
+
+    const result = await pool.query(query, values);
+    return result.rows;
+  } catch (err) {
+    logger.error({ error: err.message });
+    throw err;
+  }
+};
+
+// Function to update a survey feedback entry
+export const updateSurveyFeedbackService = async (response_id, updateData) => {
+  logger.database("METHOD api/admin/survey_feedback - UPDATE");
+  try {
+    const {
+      entity,
+      rating,
+      response_value,
+      touchpoint,
+      is_analyzed,
+      surveyquestion_ref,
+      language,
+      relevance,
+    } = updateData;
+
+    const query = `
+      UPDATE public.survey_feedback
+      SET
+        entity = COALESCE($1, entity),
+        rating = COALESCE($2, rating),
+        response_value = COALESCE($3, response_value),
+        touchpoint = COALESCE($4, touchpoint),
+        is_analyzed = COALESCE($5, is_analyzed),
+        surveyquestion_ref = COALESCE($6, surveyquestion_ref),
+        language = COALESCE($7, language),
+        relevance = COALESCE($8, relevance)
+      WHERE response_id = $9
+      RETURNING *;
+    `;
+    const values = [
+      entity,
+      rating,
+      response_value,
+      touchpoint,
+      is_analyzed,
+      surveyquestion_ref,
+      language,
+      relevance,
+      response_id,
+    ];
+    const result = await pool.query(query, values);
+    return result.rows[0];
+  } catch (err) {
+    logger.error({ error: err.message });
+    throw err;
+  }
+};
+
+// Function to delete a survey feedback entry by response ID
+export const deleteSurveyFeedbackService = async (response_id) => {
+  logger.database("METHOD api/admin/survey_feedback - DELETE");
+  try {
+    const query = `
+      DELETE FROM public.survey_feedback
+      WHERE response_id = $1
+      RETURNING *;
+    `;
+    const values = [response_id];
+    const result = await pool.query(query, values);
+    return result.rows[0];
+  } catch (err) {
+    logger.error({ error: err.message });
+    throw err;
+  }
+};
 // // Function to fetch duplicate establishment names
 // export const fetchDuplicateEstablishmentsService = async () => {
 //   logger.database("METHOD api/admin/establishments - FETCH DUPLICATES");
