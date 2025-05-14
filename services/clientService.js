@@ -105,14 +105,55 @@ export const getTourismAttractionLocalizations = async (languageCode) => {
   }
 };
 
+
+// pseudo-spam protection code to prevent duplicate entries to be inserted into survey_feedback table
 export const submitSurveyFeedback = async ({ entity, rating, review, touchpoint, anonid, language }) => {
-  const query = `
-    INSERT INTO survey_feedback (entity, rating, response_value, touchpoint, anonymous_user_id, surveyquestion_ref, language)
-    VALUES ($1, $2, $3, $4, $5, $6, $7 )
-    RETURNING response_id, created_at;
-  `;
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
 
-  const result = await pool.query(query, [entity, rating, review, touchpoint, anonid, 'TPENT', language]);
-  return result.rows[0];
+    // First, insert/update the survey feedback
+    const surveyQuery = `
+      INSERT INTO survey_feedback (entity, rating, response_value, touchpoint, anonymous_user_id, surveyquestion_ref, language)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      ON CONFLICT (anonymous_user_id, entity) 
+      DO UPDATE SET 
+        rating = EXCLUDED.rating,
+        response_value = EXCLUDED.response_value,
+        touchpoint = EXCLUDED.touchpoint,
+        surveyquestion_ref = EXCLUDED.surveyquestion_ref,
+        language = EXCLUDED.language,
+        created_at = NOW()
+      RETURNING response_id, created_at, (xmax::text::int > 0) AS was_update;
+    `;
+
+    const surveyResult = await client.query(surveyQuery, [
+      entity, 
+      rating, 
+      review, 
+      touchpoint, 
+      anonid, 
+      'TPENT', 
+      language
+    ]);
+
+    // If it was an update (conflict occurred), increment spamcounter
+    if (surveyResult.rows[0]?.was_update) {
+      const updateUserQuery = `
+        UPDATE anonymous_users 
+        SET spamcounter = COALESCE(spamcounter, 0) + 2 
+        WHERE anonymous_user_id = $1
+      `;
+      await client.query(updateUserQuery, [anonid]);
+    }
+
+    await client.query('COMMIT');
+    return surveyResult.rows[0];
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
 };
-

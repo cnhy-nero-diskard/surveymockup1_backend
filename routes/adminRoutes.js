@@ -1,13 +1,13 @@
 // routes/adminRoutes.js
 import express from 'express';
-import { getAdminData, getAdminSessionData, updateTourismAttractionController, addTourismAttractionController, deleteTourismAttractionController, posthftokens, gethftokens, analyzeSentiment, analyzeTopics, fetchAnonymousUsersController, logstream, getEstablishmentEnglishNamesController, getOpenEndedSurveyResponses, createLocalization, fetchLocalization, updateLocalization, deleteLocalization, createEstablishment, fetchEstablishments, updateEstablishment, deleteEstablishment, createTourismAttractionController, fetchTourismAttractionController, createSurveyResponseController, fetchSurveyResponsesController, updateSurveyResponseController, deleteSurveyResponseController, fetchSurveyQuestionsController, createSentimentAnalysisController, updateSentimentAnalysisController, fetchSentimentAnalysisController, deleteSentimentAnalysisController, insertTopicDataController, fetchAllTouchpointsController, fetchTranslatedTouchpointController, groupByLikertRatingController, getSurveyMetricsAnalyticsController, getSurveyFeedbackController, getAllByTallyController, getSentimentAnalysisController, getSurveyByTopicController, getSentimentLocationController, createSurveyFeedbackController, fetchSurveyFeedbackController, updateSurveyFeedbackController, deleteSurveyFeedbackController } from '../controllers/adminController.js';
+import { getAdminData, getAdminSessionData, updateTourismAttractionController, addTourismAttractionController, deleteTourismAttractionController, posthftokens, gethftokens, analyzeSentiment, analyzeTopics, fetchAnonymousUsersController, logstream, getEstablishmentEnglishNamesController, getOpenEndedSurveyResponses, createLocalization, fetchLocalization, updateLocalization, deleteLocalization, createEstablishment, fetchEstablishments, updateEstablishment, deleteEstablishment, createTourismAttractionController, fetchTourismAttractionController, createSurveyResponseController, fetchSurveyResponsesController, updateSurveyResponseController, deleteSurveyResponseController, fetchSurveyQuestionsController, createSentimentAnalysisController, updateSentimentAnalysisController, fetchSentimentAnalysisController, deleteSentimentAnalysisController, insertTopicDataController, fetchAllTouchpointsController, fetchTranslatedTouchpointController, groupByLikertRatingController, getSurveyMetricsAnalyticsController, getSurveyFeedbackController, getAllByTallyController, getSentimentAnalysisController, getSurveyByTopicController, getSentimentLocationController, createSurveyFeedbackController, fetchSurveyFeedbackController, updateSurveyFeedbackController, deleteSurveyFeedbackController, autoAnalyzeSentimentController, autoClassifyRelevanceController, obtainSpamAnonymousUsersController, fetchLocationsWithFilterController, fetchEstTypesController } from '../controllers/adminController.js';
 import { authenticate, authorizeAdmin } from '../middleware/authMiddleware.js';
 import { submitSurveyResponseController } from '../controllers/surveyController.js';
 import { validateSurveyResponse } from '../middleware/validationMiddleware.js';
 import { validateTourismAttraction } from '../middleware/validationMiddleware.js';
 import { getEstablishmentEnglishNames, purgeAnonymousUsers } from '../services/adminService.js';
 import { getMetrics } from '../metrics/metricsController.js';
-import { createSurveyFeedbackService, deleteSurveyFeedbackService, fetchAllTouchpointsService, fetchAllTourismAttractionsService, fetchLocationsService, fetchLocationsServiceFiltered, fetchSurveyFeedbackService, fetchTranslatedTouchpointService, insertTopicDataService, updateSurveyFeedbackService } from '../services/adminCRUD.js';
+import { createSurveyFeedbackService, deleteSurveyFeedbackService, fetchAllTouchpointsService, fetchAllTourismAttractionsService, fetchEstTypes, fetchLocationsService, fetchLocationsServiceFiltered, fetchLocationsWithFilterService, fetchSurveyFeedbackService, fetchTranslatedTouchpointService, insertTopicDataService, updateSurveyFeedbackService } from '../services/adminCRUD.js';
 import logger from "../middleware/logger.js";
 import { calculateAverageCompletionTimeService, fetchByCountryResidence, fetchByGender, fetchAllFinishedRows, fetchAndGroupFinishedSurveyResponsesByMonthService, fetchByNationality, fetchByTimeOfDay, fetchTouchpointsService, fetchUnfinishedSurveys, fetchEntityinSurveyFeedbackService, getAllSurveyTally, getSentimentAnalysis, getSurveyResponseByTopic } from '../services/analyticsCRUD.js';
 
@@ -58,10 +58,10 @@ router.get('/api/admin/sentiment_results', fetchSentimentAnalysisController);
 router.put('/api/admin/sentiment_results', updateSentimentAnalysisController);
 router.delete('/api/admin/sentiment_results', deleteSentimentAnalysisController);
 
-router.post('/api/admin/survey-feedback', createSurveyFeedbackController);
+// router.post('/api/admin/survey-feedback', createSurveyFeedbackController);
 router.get('/api/admin/survey-feedback', fetchSurveyFeedbackController);
-router.put('/api/admin/survey-feedback', updateSurveyFeedbackController);
-router.delete('/api/admin/survey-feedback', deleteSurveyFeedbackController);
+router.put('/api/admin/survey-feedback/:id', updateSurveyFeedbackController);
+router.delete('/api/admin/survey-feedback/:id', deleteSurveyFeedbackController);
 
 
 router.get('/api/admin/survey-questions', fetchSurveyQuestionsController);
@@ -81,13 +81,21 @@ router.post('/api/admin/getsentimenttableforlocation', getSentimentLocationContr
 
 router.get('/api/admin/surveytopics', getSurveyByTopicController);
 
+router.get('/api/admin/automateclassification', autoClassifyRelevanceController)
+router.get('/api/admin/automatesentiment', autoAnalyzeSentimentController);
+
+router.get('/api/admin/spam-anonymous-users', obtainSpamAnonymousUsersController);
+router.get('/api/admin/locations', fetchLocationsWithFilterController);
+router.get('/api/admin/estabtypes', fetchEstTypesController);
 
 //TESTING ENDPOINT
 router.get('/api/admin/test', async (req, res) => {
+    //
     try {
         // Insert test function here
-        const result = await  fetchSurveyFeedbackService() ;
-        res.status(200).json(result);
+        // const result = await fetchLocationsWithFilterService({location_type: req.query.location_type});
+        const result = await fetchEstTypes();
+        res.json(result);
     } catch (error) {
         console.error('Test endpoint error:', error);
         res.status(500).json({ debugError: `TEST HAS ENCOUNTERED A BUG: << ${error} >>` });

@@ -8,7 +8,7 @@ import { queryHuggingFace } from '../services/huggingFaceService.js';
 import { logEmitter } from '../middleware/logger.js';
 import dotenv from 'dotenv';
 import { response } from 'express';
-import { createEstablishmentService, createLocalizationService, createSentimentAnalysisService, createSurveyFeedbackService, createTourismAttractionService, deleteEstablishmentService, deleteLocalizationService, deleteSentimentAnalysisService, deleteSurveyFeedbackService, deleteSurveyResponseService, deleteTourismAttractionService, fetchAllTouchpointsService, fetchEstablishmentsService, fetchLocalizationsService, fetchSentimentAnalysisService, fetchSurveyFeedbackService, fetchSurveyResponsesService, fetchTourismAttractionsService, fetchTranslatedTouchpointService, insertTopicDataService, updateEstablishmentService, updateLocalizationService, updateSentimentAnalysisService, updateSurveyFeedbackService, updateSurveyResponseService, updateTourismAttractionService } from '../services/adminCRUD.js';
+import { createEstablishmentService, createLocalizationService, createSentimentAnalysisService, createSurveyFeedbackService, createTourismAttractionService, deleteEstablishmentService, deleteLocalizationService, deleteSentimentAnalysisService, deleteSurveyFeedbackService, deleteSurveyResponseService, deleteTourismAttractionService, fetchAllTouchpointsService, fetchEstablishmentsService, fetchEstTypes, fetchLocalizationsService, fetchLocationsWithFilterService, fetchSentimentAnalysisService, fetchSurveyFeedbackService, fetchSurveyResponsesService, fetchTourismAttractionsService, fetchTranslatedTouchpointService, insertTopicDataService, updateEstablishmentService, updateLocalizationService, updateSentimentAnalysisService, updateSurveyFeedbackService, updateSurveyResponseService, updateTourismAttractionService } from '../services/adminCRUD.js';
 import { calculateAverageCompletionTimeService, fetchAllFinishedRows, fetchAndGroupFinishedSurveyResponsesByMonthService, fetchByAgeGroup, fetchByCountryResidence, fetchByGender, fetchByNationality, fetchByTimeOfDay, fetchEntityinSurveyFeedbackService, fetchTouchpointsService, fetchUnfinishedSurveys, getAllSurveyTally, getSentimentAnalysis, getSentimentLocation, getSurveyResponseByTopic, groupByLikertRatingService } from '../services/analyticsCRUD.js';
 dotenv.config();
 
@@ -161,6 +161,152 @@ export const analyzeTopics = async (req, res) => {
   }
 };
 
+
+
+
+//automatic process for both sentiment analysis and relevance classifier when user logs to main dashboard
+
+
+export const autoAnalyzeSentimentController = async (req, res) => {
+  logger.info("POST /api/admin/auto-analyze-sentiment");
+
+  try {
+    const apiToken = await getHFTokenByLabel('DEV_free');
+    if (!apiToken) {
+      return res.status(400).json({ error: 'Invalid API token label' });
+    }
+
+    const relevantFeedback = await pool.query(
+      'SELECT response_id, response_value, anonymous_user_id, surveyquestion_ref FROM survey_feedback WHERE relevance = $1 AND (is_analyzed = $2 OR is_analyzed = $3) ORDER BY response_id',
+      ['RELEVANT', 'No', false]
+    );
+
+    if (relevantFeedback.rows.length === 0) {
+      return res.status(200).json({ message: 'No feedback to analyze' });
+    }
+
+    const combinedText = relevantFeedback.rows.map(row => row.response_value).join('\n');
+    logger.info(`Analyzing sentiment for ${relevantFeedback.rows.length} responses`);
+
+    if (!process.env.BERTSENT_ENDPOINT) {
+      throw new Error('BERT sentiment analysis endpoint not configured');
+    }
+
+    const analysisResults = await queryHuggingFace(combinedText, apiToken, process.env.BERTSENT_ENDPOINT);
+
+    if (!Array.isArray(analysisResults)) {
+      throw new Error(`Unexpected API response format: ${JSON.stringify(analysisResults)}`);
+    }
+
+    if (analysisResults.length !== relevantFeedback.rows.length) {
+      throw new Error(`Mismatch in response count. Sent ${relevantFeedback.rows.length}, got ${analysisResults.length}`);
+    }
+
+    analysisResults.forEach((result, index) => {
+      if (!result || typeof result.sentiment === 'undefined' || typeof result.confidence === 'undefined') {
+        throw new Error(`Invalid analysis result at index ${index}: ${JSON.stringify(result)}`);
+      }
+    });
+
+    // Start a transaction
+    await pool.query('BEGIN');
+
+    try {
+      // Update survey_feedback (only is_analyzed)
+      const updateFeedbackPromises = relevantFeedback.rows.map((row) => {
+        return pool.query(
+          'UPDATE survey_feedback SET is_analyzed = true WHERE response_id = $1',
+          [row.response_id]
+        );
+      });
+
+      // Insert into sentiment_analysis
+      const insertSentimentPromises = relevantFeedback.rows.map((row, index) => {
+        const result = analysisResults[index];
+        return pool.query(
+          `INSERT INTO sentiment_analysis 
+           (user_id, sqref, sentiment, confidence, response_id) 
+           VALUES ($1, $2, $3, $4, $5)`,
+          [row.anonymous_user_id, row.surveyquestion_ref, result.sentiment, result.confidence, row.response_id]
+        );
+      });
+
+      await Promise.all([...updateFeedbackPromises, ...insertSentimentPromises]);
+      await pool.query('COMMIT');
+    } catch (err) {
+      await pool.query('ROLLBACK');
+      throw err;
+    }
+
+    res.json({
+      message: `Successfully analyzed sentiment for ${analysisResults.length} responses`,
+      results: analysisResults
+    });
+  } catch (err) {
+    console.error('Error during sentiment analysis:', err);
+    res.status(500).json({ 
+      error: 'Failed to analyze sentiment', 
+      details: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+  }
+};
+
+export const autoClassifyRelevanceController = async (req, res) => {
+  logger.info("POST /api/admin/classify-relevance");
+
+  // const tokenLabel = req.body.tokenLabel;
+  // logger.info(`Using API token label: ${tokenLabel}`);
+  
+  try {
+    // Fetch the decrypted API token from the database using the label
+    const apiToken = await getHFTokenByLabel('DEV_free');
+    if (!apiToken) {
+      return res.status(400).json({ error: 'Invalid API token label' });
+    }
+    // Get all feedback with UNKNOWN relevance
+    const unknownFeedback = await pool.query(
+      'SELECT response_id, response_value FROM survey_feedback WHERE relevance = $1 ORDER BY response_id',
+      ['UNKNOWN']
+    );
+
+    if (unknownFeedback.rows.length === 0) {
+      return res.json({ message: 'No feedback with UNKNOWN relevance found' });
+    }
+
+    // Combine all responses with newline separator
+    const combinedText = unknownFeedback.rows.map(row => row.response_value).join('\n');
+    logger.info(`Classifying relevance for ${unknownFeedback.rows.length} responses`);
+
+    // Send to Hugging Face
+    const analysisResults = await queryHuggingFace(combinedText, apiToken, process.env.BERTRCLS_ENDPOINT);
+
+    // Verify we got the same number of results back
+    if (analysisResults.length !== unknownFeedback.rows.length) {
+      throw new Error(`Mismatch in response count. Sent ${unknownFeedback.rows.length}, got ${analysisResults.length}`);
+    }
+
+    // Update each record in the database
+    const updatePromises = unknownFeedback.rows.map((row, index) => {
+      const result = analysisResults[index];
+      return pool.query(
+        'UPDATE survey_feedback SET relevance = $1 WHERE response_id = $2',
+        [result.relevance, row.response_id]
+      );
+    });
+
+    // await Promise.all(updatePromises);
+
+    // Return the analysis results to the frontend
+    res.json({
+      message: `Successfully classified ${analysisResults.length} responses`,
+      results: analysisResults
+    });
+  } catch (err) {
+    console.error('Error during relevance classification:', err);
+    res.status(500).json({ error: 'Failed to classify relevance', details: err.message });
+  }
+}
 export const fetchAnonymousUsersController = async (req, res, next) => {
   logger.info("GET /api/admin/anonymous-users");
   try {
@@ -892,14 +1038,15 @@ export const fetchSurveyFeedbackController = async (req, res, next) => {
 export const updateSurveyFeedbackController = async (req, res, next) => {
   logger.info("PUT /api/admin/survey_feedback");
   try {
-    const { id: response_id, ...updateData } = req.params;
-
-    if (!response_id) {
-      return res.status(400).json({ error: "Missing required field: response_id" });
+    const { id } = req.params;
+    const updateData = req.body;
+    logger.warn(`ID AND UPDATEDATA ==> ${id} --- ${JSON.stringify(updateData)}`);
+    if (!id) {
+      return res.status(400).json({ error: "Missing required field: id" });
     }
 
-    const result = await updateSurveyFeedbackService(response_id, updateData);
-    res.json({ message: `Survey feedback ${response_id} updated successfully`, feedback: result });
+    const result = await updateSurveyFeedbackService(id, updateData);
+    res.json({ message: `Survey feedback ${id} updated successfully`, feedback: result });
   } catch (err) {
     next(`ERROR ON UPDATING SURVEY FEEDBACK: ${err}`);
   }
@@ -908,7 +1055,7 @@ export const updateSurveyFeedbackController = async (req, res, next) => {
 export const deleteSurveyFeedbackController = async (req, res, next) => {
   logger.info("DELETE /api/admin/survey_feedback");
   try {
-    const { response_id } = req.body;
+    const  response_id  = req.params.id;
 
     if (!response_id) {
       return res.status(400).json({ error: "Missing required field: response_id" });
@@ -918,5 +1065,44 @@ export const deleteSurveyFeedbackController = async (req, res, next) => {
     res.json({ message: `Survey feedback ${response_id} deleted successfully`, feedback: result });
   } catch (err) {
     next(`ERROR ON DELETING SURVEY FEEDBACK: ${err}`);
+  }
+};
+
+export const obtainSpamAnonymousUsersController = async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM public.anonymous_users WHERE spamcounter > $1',
+      [40]
+    );
+    logger.database(`SPAM ANON USERS: ${JSON.stringify(result.rows)}`);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    console.error('Error fetching spam anonymous users:', err);
+    res.status(500).json({ error: 'Failed to fetch spam anonymous users', details: err.message });
+  }
+}
+
+export const fetchLocationsWithFilterController = async (req, res, next) => {
+  logger.info("GET /api/admin/locations");
+  try {
+    const filters = {
+      location_type: req.query.location_type,
+      name: req.query.name,
+    };
+
+    const locations = await fetchLocationsWithFilterService(filters);
+    res.json(locations);
+  } catch (err) {
+    next(`ERROR ON FETCHING LOCATIONS WITH FILTER: ${err}`);
+  }
+};
+
+export const fetchEstTypesController = async (req, res, next) => {
+  logger.info("GET /api/admin/estabtypes");
+  try {
+    const types = await fetchEstTypes();
+    res.json(types);
+  } catch (err) {
+    next(`ERROR ON FETCHING ESTABLISHMENT TYPES: ${err}`);
   }
 };

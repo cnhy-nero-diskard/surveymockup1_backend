@@ -17,6 +17,7 @@ import session from 'express-session';
 import pool from './config/db.js';
 import pgSession from 'connect-pg-simple';
 import { logstream } from './controllers/adminController.js';
+import { spamThrottle } from './middleware/spamthrottle.js';
 
 const requiredEnvVars = [ 'FRONTEND_URL', 'PORT'];
 for (const envVar of requiredEnvVars) {
@@ -52,11 +53,12 @@ app.use(
     saveUninitialized: false,
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 7, // 1 day
-      secure: true // Set to true if using HTTPS
+      secure: false // Set to true if using HTTPS
     },
   })
 );
 app.use(handleAnonymousUser);
+app.use(spamThrottle);
 
 
 // Use client routes

@@ -140,10 +140,18 @@ export const updateSurveyProgress = async (req, res, next) => {
     const { currentStep } = req.body;
     logger.warn(`USP -- USER ${req.session.anonymousUserId} with ${currentStep}`)
     try {
+      if (currentStep === 1) {
+        await pool.query(
+          "UPDATE anonymous_users SET spamcounter = spamcounter + 1 WHERE anonymous_user_id = $1",
+          [user_id]
+        );
+        logger.database("spamcounterOR INCREMENTED");
+      }
       await pool.query(
         "UPDATE anonymous_users SET current_step = $1 WHERE anonymous_user_id = $2",
         [currentStep, user_id]
       );
+
       res.status(200).json({ message: "Progress updated" });
     } catch (err) {
       console.error(err.message);
@@ -220,6 +228,7 @@ export const submitEstablishmentSurveyResponse = async (req, res, next) => {
   }
 };
 //SPECIFICALLY HANDLES JSON
+//WARNING: THIS FUNCTION IS NOT USED
 export const appendNewFeedback = async (req, res, next) => {
   logger.database("POST /api/survey/feedback");
   const anonymousUserId = req.session.anonymousUserId; // Get the anonymous user ID from the session

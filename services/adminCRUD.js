@@ -113,7 +113,7 @@ export const createEstablishmentService = async (
     const query = `
       INSERT INTO public.establishments (
         est_name, type, city_mun, barangay, latitude, longitude,
-        english, korean, chinese, japanese, russian, french, spanish, hindi
+        en, ko, zh, ja, ru, fr, es, hi
       )
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
       RETURNING *;
@@ -183,7 +183,7 @@ export const updateEstablishmentService = async (
       UPDATE public.establishments
       SET
         est_name = $1, type = $2, city_mun = $3, barangay = $4, latitude = $5, longitude = $6,
-        english = $7, korean = $8, chinese = $9, japanese = $10, russian = $11, french = $12, spanish = $13, hindi = $14
+        en = $7, ko = $8, zh = $9, ja = $10, ru = $11, fr = $12, es = $13, hi = $14
       WHERE id = $15
       RETURNING *;
     `;
@@ -465,6 +465,115 @@ export const deleteSurveyResponseServiceByUserId = async (anonymous_user_id) => 
   }
 };
 
+// Function to create a new location entry
+export const createLocationService = async (locationData) => {
+  logger.database("METHOD api/admin/locations - CREATE");
+  try {
+    const { parent_id, location_type, name, latitude, longitude, short_id } = locationData;
+
+    const query = `
+      INSERT INTO public.locations (
+        parent_id, location_type, name, latitude, longitude, short_id
+      )
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *;
+    `;
+    const values = [parent_id, location_type, name, latitude, longitude, short_id];
+    const result = await pool.query(query, values);
+    return result.rows[0];
+  } catch (err) {
+    logger.error({ error: err.message });
+    throw err;
+  }
+};
+
+// Function to fetch locations with optional filters
+export const fetchLocationsWithFilterService = async (filters = {}) => {
+  logger.database("METHOD api/admin/locations - READ WITH FILTER");
+  try {
+    let query = `SELECT * FROM public.locations`;
+    const values = [];
+    const conditions = [];
+
+    if (filters.location_type) {
+      conditions.push(`location_type = $${values.length + 1}`);
+      values.push(filters.location_type);
+    }
+    if (filters.name) {
+      conditions.push(`name ILIKE $${values.length + 1}`);
+      values.push(`%${filters.name}%`);
+    }
+
+    if (conditions.length > 0) {
+      query += ` WHERE ${conditions.join(" AND ")}`;
+    }
+
+    const result = await pool.query(query, values);
+    return result.rows;
+  } catch (err) {
+    logger.error({ error: err.message });
+    throw err;
+  }
+};
+
+// Function to update a location entry
+export const updateLocationService = async (id, updateData) => {
+  logger.database("METHOD api/admin/locations - UPDATE");
+  try {
+    const { parent_id, location_type, name, latitude, longitude, short_id } = updateData;
+
+    const query = `
+      UPDATE public.locations
+      SET
+        parent_id = COALESCE($1, parent_id),
+        location_type = COALESCE($2, location_type),
+        name = COALESCE($3, name),
+        latitude = COALESCE($4, latitude),
+        longitude = COALESCE($5, longitude),
+        short_id = COALESCE($6, short_id),
+        updated_at = now()
+      WHERE id = $7
+      RETURNING *;
+    `;
+    const values = [parent_id, location_type, name, latitude, longitude, short_id, id];
+    const result = await pool.query(query, values);
+    return result.rows[0];
+  } catch (err) {
+    logger.error({ error: err.message });
+    throw err;
+  }
+};
+
+// Function to delete a location entry by ID
+export const deleteLocationService = async (id) => {
+  logger.database("METHOD api/admin/locations - DELETE");
+  try {
+    const query = `
+      DELETE FROM public.locations
+      WHERE id = $1
+      RETURNING *;
+    `;
+    const values = [id];
+    const result = await pool.query(query, values);
+    return result.rows[0];
+  } catch (err) {
+    logger.error({ error: err.message });
+    throw err;
+  }
+};
+
+export const fetchEstTypes = async () => {
+  logger.database("METHOD api/admin/estabtypes - READ ");
+  try {
+    let query = `SELECT type_name FROM public.est_types`;
+    const values = [];
+    const result = await pool.query(query, values);
+    return result.rows;
+  } catch (err) {
+    logger.error({ error: err.message });
+    throw err;
+  }
+};
 // DISABLED -- SESSION MANAGER WILL BE THE ONLY SERVICE THAT CAN ADD STUFF IN THIS TABLE
 // // Function to create a new anonymous user entry in the database
 // export const createAnonymousUserService = async (anonymous_user_id, nickname) => {

@@ -24,7 +24,7 @@ router.post('/api/survey/submit', submitSurveyResponseController);
 router.get('/api/survey/responses/:user_id', fetchSurveyResponsesController);
 router.get('/api/init-anonymous-user', handleAnonymousUser, (req, res) => {
     logger.info('GET /api/init-anonymous-user');
-    res.status(200).send('Anonymous user ID initialized');
+    // res.status(200).send('Anonymous user ID initialized');
 });
 
 router.get("/survey/step/:step", validateSurveyStep, (req, res) => {
