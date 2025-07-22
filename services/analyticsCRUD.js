@@ -1,3 +1,4 @@
+// services/adminCRUD.js
 import { query } from "express";
 import pool from "../config/db.js";
 import logger from "../middleware/logger.js";
@@ -745,21 +746,21 @@ export const getSentimentAnalysis = async () => {
         SELECT sf.response_value 
         FROM survey_feedback sf
         JOIN sentiment_analysis sa ON sf.response_id = sa.response_id
-        WHERE sa.sentiment = 'positive';
+        WHERE sa.sentiment = 'positive' AND sf.relevance = 'RELEVANT';
       `;
 
         const neutralQuery = `
         SELECT sf.response_value 
         FROM survey_feedback sf
         JOIN sentiment_analysis sa ON sf.response_id = sa.response_id
-        WHERE sa.sentiment = 'neutral';
+        WHERE sa.sentiment = 'neutral' AND sf.relevance = 'RELEVANT';
       `;
 
         const negativeQuery = `
         SELECT sf.response_value 
         FROM survey_feedback sf
         JOIN sentiment_analysis sa ON sf.response_id = sa.response_id
-        WHERE sa.sentiment = 'negative';
+        WHERE sa.sentiment = 'negative' AND sf.relevance = 'RELEVANT';
       `;
 
         const [positiveResult, neutralResult, negativeResult] = await Promise.all([

@@ -21,18 +21,6 @@ export const getHFTokens = async () => {
   return result.rows;
 };
 
-// export const getHFTokenById = async (id) => {
-//   const query = 'SELECT apitoken FROM HF_TOKENS WHERE id = $1';
-//   const result = await pool.query(query, [id]);
-//   if (result.rows.length > 0) {
-//     logger.info('Decrypted API token:', decrypt(result.rows[0].apitoken));
-//     const token = decrypt(result.rows[0].apitoken);
-//     return token;
-//   }
-//   logger.error('API token not found');
-//   return null;
-// };
-
 export const getHFTokenByLabel = async (label) => {
     const query = 'SELECT apitoken FROM HF_TOKENS WHERE label = $1';
     const result = await pool.query(query, [label]);

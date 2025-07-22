@@ -1,3 +1,4 @@
+// middlware/spamthrottle.js
 import rateLimit from 'express-rate-limit';
 import pool from '../config/db.js';
 import logger from './logger.js';

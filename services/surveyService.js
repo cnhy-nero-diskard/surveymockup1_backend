@@ -15,6 +15,16 @@ import logger from '../middleware/logger.js';
  */
 export const submitSurveyResponse = async (response, anonymousUserId) => {
     try {
+        // Clean response by removing newline characters
+        const cleanedResponse = {
+            ...response,
+            surveyquestion_ref: response.surveyquestion_ref?.trim(),
+            response_value: typeof response.response_value === 'string' 
+                ? response.response_value.trim().replace(/\n/g, '') 
+                : response.response_value
+        };
+
+
         const logtext = ` METHOD submit survey responses --> database`;
         logger.database(logtext);
         const query = `
@@ -36,11 +46,10 @@ export const submitSurveyResponse = async (response, anonymousUserId) => {
 
         const values = [
             anonymousUserId,
-            response.surveyquestion_ref,
-            response.response_value,
-            response.touchpoint
+            cleanedResponse.surveyquestion_ref,
+            cleanedResponse.response_value,
+            cleanedResponse.touchpoint
         ];
-
 
         const result = await pool.query(query, values);
         return result.rows[0];

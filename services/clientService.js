@@ -108,10 +108,8 @@ export const getTourismAttractionLocalizations = async (languageCode) => {
 
 // pseudo-spam protection code to prevent duplicate entries to be inserted into survey_feedback table
 export const submitSurveyFeedback = async ({ entity, rating, review, touchpoint, anonid, language }) => {
-  const client = await pool.connect();
   
   try {
-    await client.query('BEGIN');
 
     // First, insert/update the survey feedback
     const surveyQuery = `
@@ -124,11 +122,13 @@ export const submitSurveyFeedback = async ({ entity, rating, review, touchpoint,
         touchpoint = EXCLUDED.touchpoint,
         surveyquestion_ref = EXCLUDED.surveyquestion_ref,
         language = EXCLUDED.language,
+        relevance = 'UNKNOWN',
+        is_analyzed = false,
         created_at = NOW()
       RETURNING response_id, created_at, (xmax::text::int > 0) AS was_update;
     `;
 
-    const surveyResult = await client.query(surveyQuery, [
+    const surveyResult = await pool.query(surveyQuery, [
       entity, 
       rating, 
       review, 
@@ -138,22 +138,29 @@ export const submitSurveyFeedback = async ({ entity, rating, review, touchpoint,
       language
     ]);
 
-    // If it was an update (conflict occurred), increment spamcounter
+    // If it was an update (conflict occurred)
     if (surveyResult.rows[0]?.was_update) {
+      // Increment spamcounter
       const updateUserQuery = `
         UPDATE anonymous_users 
         SET spamcounter = COALESCE(spamcounter, 0) + 2 
         WHERE anonymous_user_id = $1
       `;
-      await client.query(updateUserQuery, [anonid]);
+      await pool.query(updateUserQuery, [anonid]);
+
+      // Delete matching sentiment analysis record
+      const deleteSentimentQuery = `
+        DELETE FROM sentiment_analysis 
+        WHERE response_id = $1
+      `;
+      await pool.query(deleteSentimentQuery, [surveyResult.rows[0].response_id]);
     }
 
-    await client.query('COMMIT');
+    await pool.query('COMMIT');
     return surveyResult.rows[0];
   } catch (error) {
-    await client.query('ROLLBACK');
+    await pool.query('ROLLBACK');
     throw error;
   } finally {
-    client.release();
   }
 };

@@ -1,3 +1,4 @@
+// services/adminCRUD.js
 import { query } from "express";
 import pool from "../config/db.js";
 import logger from "../middleware/logger.js";
@@ -1080,24 +1081,31 @@ export const createSurveyFeedbackService = async (feedbackData) => {
 export const fetchSurveyFeedbackService = async (filters = {}) => {
   logger.database("METHOD api/admin/survey_feedback - READ");
   try {
-    let query = `SELECT * FROM public.survey_feedback`;
+    let query = `
+      SELECT 
+        sf.*,
+        sa.sentiment
+      FROM public.survey_feedback sf
+      LEFT JOIN public.sentiment_analysis sa 
+        ON sf.response_id = sa.response_id`;
+        
     const values = [];
     const conditions = [];
 
     if (filters.anonymous_user_id) {
-      conditions.push(`anonymous_user_id = $${values.length + 1}`);
+      conditions.push(`sf.anonymous_user_id = $${values.length + 1}`);
       values.push(filters.anonymous_user_id);
     }
     if (filters.entity) {
-      conditions.push(`entity ILIKE $${values.length + 1}`);
+      conditions.push(`sf.entity ILIKE $${values.length + 1}`);
       values.push(`%${filters.entity}%`);
     }
     if (filters.touchpoint) {
-      conditions.push(`touchpoint = $${values.length + 1}`);
+      conditions.push(`sf.touchpoint = $${values.length + 1}`);
       values.push(filters.touchpoint);
     }
     if (filters.is_analyzed !== undefined) {
-      conditions.push(`is_analyzed = $${values.length + 1}`);
+      conditions.push(`sf.is_analyzed = $${values.length + 1}`);
       values.push(filters.is_analyzed);
     }
 
